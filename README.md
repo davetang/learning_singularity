@@ -75,6 +75,9 @@ singularity --version
 
 ## Getting started
 
+Following the getting started guide from the [Nextflow
+tutorial](https://training.nextflow.io/basic_training/containers/#singularity).
+
 Singularity is a container runtime designed to work in high-performance
 computing data centers, where the usage of Docker is generally not allowed due
 to security reasons.
