@@ -3,6 +3,7 @@ Table of Contents
 
 * [README](#readme)
    * [Installing on CentOS/RHEL 7](#installing-on-centosrhel-7)
+   * [Installing on Debian](#installing-on-debian)
    * [Getting started](#getting-started)
       * [Images](#images)
 
