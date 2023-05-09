@@ -73,6 +73,83 @@ singularity --version
 # singularity-ce version 3.11.3
 ```
 
+## Installing on Debian
+
+[Installing](https://github.com/sylabs/singularity/blob/main/INSTALL.md) on
+Debian 11.
+
+```console
+cat /etc/os-release 
+# PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
+# NAME="Debian GNU/Linux"
+# VERSION_ID="11"
+# VERSION="11 (bullseye)"
+# VERSION_CODENAME=bullseye
+# ID=debian
+# HOME_URL="https://www.debian.org/"
+# SUPPORT_URL="https://www.debian.org/support"
+# BUG_REPORT_URL="https://bugs.debian.org/"
+```
+
+Install dependencies.
+
+```console
+# Ensure repositories are up-to-date
+sudo apt-get update
+
+# Install debian packages for dependencies
+sudo apt-get install -y \
+    build-essential \
+    libseccomp-dev \
+    libglib2.0-dev \
+    pkg-config \
+    squashfs-tools \
+    cryptsetup \
+    crun \
+    uidmap \
+    git \
+    wget
+```
+
+Download Go and add to `PATH`.
+
+```console
+export VERSION=1.20.4 OS=linux ARCH=amd64  # change this as you need
+
+wget -O /tmp/go${VERSION}.${OS}-${ARCH}.tar.gz \
+  https://dl.google.com/go/go${VERSION}.${OS}-${ARCH}.tar.gz
+sudo tar -C /usr/local -xzf /tmp/go${VERSION}.${OS}-${ARCH}.tar.gz
+
+echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+source ~/.bashrc
+```
+
+Clone repository.
+
+```console
+git clone --recurse-submodules https://github.com/sylabs/singularity.git
+cd singularity
+git checkout --recurse-submodules v3.11.3
+```
+
+Configure, build, and install.
+
+```console
+./mconfig
+make -C builddir
+sudo make -C builddir install
+```
+
+Check installation.
+
+```console
+which singularity
+# /usr/local/bin/singularity
+
+singularity --version
+# singularity-ce version 3.11.3
+```
+
 ## Getting started
 
 Following the getting started guide from the [Nextflow
