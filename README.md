@@ -2,8 +2,10 @@ Table of Contents
 =================
 
 * [README](#readme)
-   * [Installing on CentOS/RHEL 7](#installing-on-centosrhel-7)
-   * [Installing on Debian](#installing-on-debian)
+   * [Installation](#installation)
+      * [CentOS/RHEL 7](#centosrhel-7)
+      * [Debian 11](#debian-11)
+      * [General steps](#general-steps)
    * [Getting started](#getting-started)
       * [Images](#images)
 
@@ -14,12 +16,19 @@ Table of Contents
 Learning about Singularity (the container platform and not the technological
 singularity).
 
-## Installing on CentOS/RHEL 7
+## Installation
 
 [SingularityCE](https://github.com/sylabs/singularity) is the Community Edition
-of Singularity.
+of Singularity and is licensed under a [BSD
+3-Clause](https://github.com/sylabs/singularity/blob/main/LICENSE.md).
+Installation is the same for different flavours of Linux except when installing
+dependencies since different distros use different package managers.
+
+### CentOS/RHEL 7
+
 [Installing](https://github.com/sylabs/singularity/blob/main/INSTALL.md) on
-CentOS/RHEL 7.
+CentOS/RHEL 7. (I have left out Git, so please include it back if you do not
+have Git installed.)
 
 ```console
 # Install basic tools for compiling
@@ -35,46 +44,7 @@ sudo yum install -y \
     wget
 ```
 
-Download Go and add to `PATH`.
-
-```console
-export VERSION=1.20.4 OS=linux ARCH=amd64  # change this as you need
-
-wget -O /tmp/go${VERSION}.${OS}-${ARCH}.tar.gz \
-  https://dl.google.com/go/go${VERSION}.${OS}-${ARCH}.tar.gz
-sudo tar -C /usr/local -xzf /tmp/go${VERSION}.${OS}-${ARCH}.tar.gz
-
-echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
-source ~/.bashrc
-```
-
-Clone repository.
-
-```console
-git clone --recurse-submodules https://github.com/sylabs/singularity.git
-cd singularity
-git checkout --recurse-submodules v3.11.3
-```
-
-Configure, build, and install.
-
-```console
-./mconfig
-make -C builddir
-sudo make -C builddir install
-```
-
-Check installation.
-
-```console
-which singularity
-# /usr/local/bin/singularity
-
-singularity --version
-# singularity-ce version 3.11.3
-```
-
-## Installing on Debian
+### Debian 11
 
 [Installing](https://github.com/sylabs/singularity/blob/main/INSTALL.md) on
 Debian 11.
@@ -111,6 +81,8 @@ sudo apt-get install -y \
     git \
     wget
 ```
+
+### General steps
 
 Download Go and add to `PATH`.
 
@@ -199,7 +171,7 @@ used the full path for singularity because `/usr/local/bin` is not in the
 singularity build my-image.sif Singularity
 # FATAL:   --remote, --fakeroot, or the proot command are required to build this source as a non-root user
 
-/usr/local/bin/singularity build my-image.sif Singularity
+sudo /usr/local/bin/singularity build my-image.sif Singularity
 # snipped
 # INFO:    Adding labels
 # INFO:    Adding environment to container
