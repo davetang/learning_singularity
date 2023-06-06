@@ -275,7 +275,14 @@ cat /etc/os-release
 
 ## BioContainers
 
-Run [BioContainers](https://biocontainers-edu.readthedocs.io/en/latest/what_is_biocontainers.html) containers.
+Run
+[BioContainers](https://biocontainers-edu.readthedocs.io/en/latest/what_is_biocontainers.html)
+containers. To look for a container, go to the [BioContainers organisation
+page](https://quay.io/organization/biocontainers) and wait for all the
+containers to load on the page; this takes several minutes because there's a
+lot of containers, so go get a tasty beverage while the page loads. (There are
+11,073 containers as of 2023/06/06.) Once it finishes loading, you can quickly
+search for a tool of interest.
 
 SAMtools.
 
@@ -316,4 +323,12 @@ singularity exec bcftools_1.17--h3cc50cf_1.sif bcftools stats 1001genomes_snp-sh
 # DP      0       242     0       0.000000        1       0.020036
 # DP      0       457     0       0.000000        1       0.020036
 # DP      0       >500    0       0.000000        4988    99.939892
+```
+
+MEME.
+
+```console
+singularity pull docker://quay.io/biocontainers/meme:5.5.2--py310pl5321h2bc4914_1
+singularity exec meme_5.5.2--py310pl5321h2bc4914_1.sif meme -version
+# 5.5.2
 ```
