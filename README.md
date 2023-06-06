@@ -8,6 +8,7 @@ Table of Contents
       * [General steps](#general-steps)
    * [Getting started](#getting-started)
       * [Images](#images)
+   * [BioContainers](#biocontainers)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
 
@@ -270,4 +271,49 @@ cat /etc/os-release
 # PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
 # UBUNTU_CODENAME=lunar
 # LOGO=ubuntu-logo
+```
+
+## BioContainers
+
+Run [BioContainers](https://biocontainers-edu.readthedocs.io/en/latest/what_is_biocontainers.html) containers.
+
+SAMtools.
+
+```console
+singularity pull docker://quay.io/biocontainers/samtools:1.17--hd87286a_1
+wget https://github.com/davetang/learning_bam_file/raw/main/eg/ERR188273_chrX.bam
+
+singularity exec samtools_1.17--hd87286a_1.sif samtools flagstat ERR188273_chrX.bam
+# 1176360 + 0 in total (QC-passed reads + QC-failed reads)
+# 1160084 + 0 primary
+# 16276 + 0 secondary
+# 0 + 0 supplementary
+# 0 + 0 duplicates
+# 0 + 0 primary duplicates
+# 1126961 + 0 mapped (95.80% : N/A)
+# 1110685 + 0 primary mapped (95.74% : N/A)
+# 1160084 + 0 paired in sequencing
+# 580042 + 0 read1
+# 580042 + 0 read2
+# 1060858 + 0 properly paired (91.45% : N/A)
+# 1065618 + 0 with itself and mate mapped
+# 45067 + 0 singletons (3.88% : N/A)
+# 0 + 0 with mate mapped to a different chr
+# 0 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+
+BCFtools.
+
+```console
+singularity pull docker://quay.io/biocontainers/bcftools:1.17--h3cc50cf_1
+wget https://github.com/davetang/learning_vcf_file/raw/main/eg/1001genomes_snp-short-indel_only_ACGTN_5000.vcf.gz
+
+singularity exec bcftools_1.17--h3cc50cf_1.sif bcftools stats 1001genomes_snp-short-indel_only_ACGTN_5000.vcf.gz | tail -6
+# [W::vcf_parse] Contig '1' is not defined in the header. (Quick workaround: index the file with tabix.)
+# # DP, Depth distribution
+# # DP    [2]id   [3]bin  [4]number of genotypes  [5]fraction of genotypes (%)    [6]number of sites      [7]fraction of sites (%)
+# DP      0       98      0       0.000000        1       0.020036
+# DP      0       242     0       0.000000        1       0.020036
+# DP      0       457     0       0.000000        1       0.020036
+# DP      0       >500    0       0.000000        4988    99.939892
 ```
