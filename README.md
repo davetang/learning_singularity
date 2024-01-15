@@ -2,6 +2,7 @@ Table of Contents
 =================
 
 * [README](#readme)
+   * [TL;DR](#tldr)
    * [Installation](#installation)
       * [CentOS/RHEL 7](#centosrhel-7)
       * [Debian 11](#debian-11)
@@ -16,6 +17,34 @@ Table of Contents
 
 Learning about Singularity (the container platform and not the technological
 singularity).
+
+## TL;DR
+
+`singularity` will automatically mount the current directory and files created
+inside the container will be owned by your host user.
+
+Import Docker image; image will be saved as `tidyverse_4.3.2.sif`.
+
+```console
+singularity pull docker://rocker/tidyverse:4.3.2
+```
+
+Run container.
+
+```console
+singularity exec tidyverse_4.3.2.sif R
+```
+
+Run a shell within a container.
+
+```console
+singularity shell tidyverse_4.3.2.sif
+
+echo $SHELL
+# /bin/bash
+```
+
+[Documentation and examples](https://sylabs.io/docs/).
 
 ## Installation
 
