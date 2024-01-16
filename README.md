@@ -10,6 +10,7 @@ Table of Contents
    * [Getting started](#getting-started)
       * [Images](#images)
    * [BioContainers](#biocontainers)
+   * [Troubleshooting](#troubleshooting)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
 
@@ -370,4 +371,15 @@ MEME.
 singularity pull docker://quay.io/biocontainers/meme:5.5.2--py310pl5321h2bc4914_1
 singularity exec meme_5.5.2--py310pl5321h2bc4914_1.sif meme -version
 # 5.5.2
+```
+
+## Troubleshooting
+
+If you get a "No space left on device error", check the size of `/tmp`
+directory. Singularity [will
+use](https://docs.sylabs.io/guides/2.5/user-guide/troubleshooting.html#no-space-left-on-device)
+the `TMPDIR` environment variable, so set it to a location with more space.
+
+```console
+export TMPDIR=$HOME/tmp
 ```
