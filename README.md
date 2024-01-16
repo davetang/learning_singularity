@@ -44,6 +44,16 @@ echo $SHELL
 # /bin/bash
 ```
 
+[Mount path](https://docs.sylabs.io/guides/3.7/user-guide/bind_paths_and_mounts.html) using `--bind`.
+
+```console
+singularity exec --bind ${HOME}/github/learning_singularity:/mnt my-image.sif ls -1 /mnt
+# LICENSE
+# my-image.sif
+# README.md
+# Singularity
+```
+
 [Documentation and examples](https://sylabs.io/docs/).
 
 ## Installation
@@ -172,7 +182,7 @@ scheduler.
 ### Images
 
 Singularity images are created using a `Singularity` file similar to a
-`Dockerfile` but using a different syntax.
+`Dockerfile` but using a different syntax. See [Singularity Definition file versus Dockerfile](https://docs.sylabs.io/guides/3.7/user-guide/singularity_and_docker.html#singularity-definition-file-vs-dockerfile).
 
 ```singularity
 Bootstrap: docker
