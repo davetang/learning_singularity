@@ -206,6 +206,15 @@ docker run --rm quay.io/singularity/singularity:v4.1.0 version
 # 4.1.0
 ```
 
+However to build images using the Dockerised Singularity, you need to run
+`docker` in privileged mode.
+
+```console
+docker run --privileged --rm -it --entrypoint /bin/bash -v $(pwd):$(pwd) -w $(pwd) quay.io/singularity/singularity:v4.1.0
+
+singularity build test.sif Singularity
+```
+
 ## Getting started
 
 Following the getting started guide from the [Nextflow
