@@ -7,6 +7,7 @@ Table of Contents
       * [CentOS/RHEL 7](#centosrhel-7)
       * [Debian 11](#debian-11)
       * [General steps](#general-steps)
+      * [Docker](#docker)
    * [Getting started](#getting-started)
       * [Images](#images)
    * [BioContainers](#biocontainers)
@@ -194,6 +195,15 @@ which singularity
 
 singularity --version
 # singularity-ce version 3.11.3
+```
+
+### Docker
+
+It never occurred to me that you could use Singularity inside Docker!
+
+```console
+docker run --rm quay.io/singularity/singularity:v4.1.0 version
+# 4.1.0
 ```
 
 ## Getting started
