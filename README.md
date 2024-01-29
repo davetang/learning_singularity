@@ -21,6 +21,38 @@ singularity).
 
 ## TL;DR
 
+[Hello World example](https://carpentries-incubator.github.io/singularity-introduction/01-singularity-gettingstarted/index.html).
+
+```console
+mkdir test
+cd test
+singularity pull hello-world.sif shub://vsoch/hello-world
+singularity run hello-world.sif
+# RaawwWWWWWRRRR!! Avocado!
+```
+
+The image is hosted on [DataLad](https://datasets.datalad.org/?dir=/shub/vsoch/hello-world/latest/2021-04-19-3bac21df-104932c9/) because [Singularity Hub is  no longer maintained](https://singularityhub.github.io/singularityhub-docs/2021/going-read-only/).
+
+Check what an image will RUN by default.
+
+```console
+singularity inspect -r hello-world.sif
+
+# #!/bin/sh
+#
+# exec /bin/bash /rawr.sh
+```
+
+Execute a command.
+
+```console
+singularity exec hello-world.sif cat /rawr.sh
+
+# #!/bin/bash
+#
+# echo "RaawwWWWWWRRRR!! Avocado!"
+```
+
 `singularity` will automatically mount the current directory and files created
 inside the container will be owned by your host user.
 
