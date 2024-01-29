@@ -8,6 +8,7 @@ Table of Contents
       * [Debian 11](#debian-11)
       * [General steps](#general-steps)
       * [Docker](#docker)
+      * [macOS with Apple Silicon](#apple-silicon)
    * [Getting started](#getting-started)
       * [Images](#images)
    * [BioContainers](#biocontainers)
@@ -213,6 +214,22 @@ However to build images using the Dockerised Singularity, you need to run
 docker run --privileged --rm -it --entrypoint /bin/bash -v $(pwd):$(pwd) -w $(pwd) quay.io/singularity/singularity:v4.1.0
 
 singularity build test.sif Singularity
+```
+
+### Apple Silicon
+
+[Installing SingularityCE on macOS with Apple Silicon using UTM and Rocky Linux](https://sylabs.io/2023/03/installing-singularityce-on-macos-with-apple-silicon-using-utm-rocky/).
+
+1. Download [UTM](https://mac.getutm.app/)
+2. Download [Rocky Linux ISO image](https://rockylinux.org/)
+3. Installing an arm64 Linux VM with UTM
+4. Use [DNF](https://docs.fedoraproject.org/en-US/quick-docs/dnf/) to install Singularity
+
+```console
+sudo dnf install epel-release
+sudo dnf install singularity-ce
+singularity --version
+singularity run library://lolcow
 ```
 
 ## Getting started
