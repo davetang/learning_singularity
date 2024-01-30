@@ -2,6 +2,7 @@ Table of Contents
 =================
 
 * [README](#readme)
+   * [Fork](#fork)
    * [TL;DR](#tldr)
    * [Installation](#installation)
       * [CentOS/RHEL 7](#centosrhel-7)
@@ -20,6 +21,24 @@ Table of Contents
 
 Learning about Singularity (the container platform and not the technological
 singularity).
+
+## Fork
+
+Singularity forked into
+[Apptainer](https://apptainer.org/news/community-announcement-20211130/) and
+[SingularityCE](https://sylabs.io/singularity/). Most of my notes here were
+written before I knew about the fork and are based on using SingularityCE.
+
+The Hellow World example works the same for `apptainer`.
+
+```console
+wget https://github.com/apptainer/apptainer/releases/download/v1.2.5/apptainer_1.2.5_amd64.deb
+sudo apt install ./apptainer_1.2.5_amd64.deb
+
+apptainer pull hello-world.sif shub://vsoch/hello-world
+apptainer run hello-world.sif
+# RaawwWWWWWRRRR!! Avocado!
+```
 
 ## TL;DR
 
@@ -125,7 +144,7 @@ sudo yum install -y \
 Debian 11.
 
 ```console
-cat /etc/os-release 
+cat /etc/os-release
 # PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
 # NAME="Debian GNU/Linux"
 # VERSION_ID="11"
