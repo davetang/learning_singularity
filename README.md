@@ -250,8 +250,45 @@ scheduler.
 
 ### Images
 
-Singularity images are created using a `Singularity` file similar to a
-`Dockerfile` but using a different syntax. See [Singularity Definition file versus Dockerfile](https://docs.sylabs.io/guides/3.7/user-guide/singularity_and_docker.html#singularity-definition-file-vs-dockerfile).
+There are two ways to building Singularity images:
+
+1. Building within a sandbox: build a container interactively within a sandbox
+   environment
+2. Building using a Singularity Definition File, which should be preferred
+   since this is more reproducible.
+
+The [Singularity Definition
+File](https://docs.sylabs.io/guides/latest/user-guide/definition_files.html) is
+similar to the `Dockerfile` for Docker but uses a different syntax. See
+[Singularity Definition file versus
+Dockerfile](https://docs.sylabs.io/guides/3.7/user-guide/singularity_and_docker.html#singularity-definition-file-vs-dockerfile).
+
+Sections (a.k.a. scriptlets or blobs) in the definition file are specified
+using a `%` prefix followed by the name of the section and are optional.
+
+```singularity
+Bootstrap: docker
+From: ubuntu:20.04
+
+%post
+    apt-get -y update && apt-get install -y python
+
+%runscript
+    python -c 'print("Hello World!")'
+```
+
+The first two lines specify where to bootstrap our image from. ([In
+computing](https://stackoverflow.com/a/1254561), a bootstrap loader is the
+first piece of code that runs when a machine starts, and is responsible for
+loading the rest of the operating system.)
+
+The `%post` section runs code within the context of the new container image.
+
+The `%runscript` section defines what runs with `singularity run`.
+
+See
+[Sections](https://docs.sylabs.io/guides/latest/user-guide/definition_files.html#sections)
+for more information on other sections.
 
 ```singularity
 Bootstrap: docker
