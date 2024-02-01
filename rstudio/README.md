@@ -30,4 +30,7 @@ Note that:
 1. The server creates temporary files that you need to clean up yourself.
 2. Packages are installed in per `R_LIBS_USER="~/R/library/4.3.2_for_RStudio_Singularity"`
 
-Based on <https://github.com/oist/BioinfoUgrp/tree/master/RStudio>.
+# Useful links
+
+* Files in this repository based on <https://github.com/oist/BioinfoUgrp/tree/master/RStudio>.
+* Also check out <https://gitlab.oit.duke.edu/chsi-informatics/containers/singularity-rstudio-base>
