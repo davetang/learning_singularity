@@ -3,32 +3,30 @@
 Build image.
 
 ```console
-singularity build --fakeroot rstudio_server.sif Singularity.def
+./build.sh
 ```
 
 Now run!
 
 ```console
-singularity run rstudio_server.sif
+singularity run rstudio-server-2023.12.1-402-amd64-R-4.3.2.sif
 ```
 ```
-RStudio URL:            http://localhost:58316/
+RStudio URL:            http://localhost:62966/
 RStudio Username:       dtang
-RStudio Password:       2c8545abbfd922c1
+RStudio Password:       d96c3152b71fe32b
 
 You may need to clean your temporary files by yourself:
-RStudio temporary files:        /home/dtang/tmp.PEHwopoLik
+RStudio temporary files:        /home/dtang/tmp.C5rfF0uRw3
 
 This image will build its packages in the following directory if it exists:
-R_LIBS_USER="~/R/library/4.3.2_for_RStudio_Singularity"
-
-TTY detected. Printing informational message about logging configuration. Logging configuration loaded from '/etc/rstudio/logging.conf'. Logging to '/home/dtang/.local/share/rstudio/log/rserver.log'.
+R_LIBS_USER="~/R/library/R_4.3.2_for_RStudio_Singularity"
 ```
 
 Note that:
 
 1. The server creates temporary files that you need to clean up yourself.
-2. Packages are installed in per `R_LIBS_USER="~/R/library/4.3.2_for_RStudio_Singularity"`
+2. Packages are installed in `~/R/library/R_4.3.2_for_RStudio_Singularity`
 
 # Useful links
 
