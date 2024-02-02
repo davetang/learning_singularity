@@ -1,6 +1,5 @@
 Bootstrap: docker
 From: debian:12.4
-
 %runscript
   exec launch_rserver "${@}"
 
@@ -38,11 +37,14 @@ From: debian:12.4
     launch_rserver.sh \
     ${SINGULARITY_ROOTFS}/usr/lib/rstudio-server/bin/launch_rserver
 
+# https://docs.sylabs.io/guides/3.11/user-guide/definition_files.html#files
 # The %files section allows you to copy files into the container with greater
 # safety than using the %setup section. Its general form is:
 # %files [from <stage>]
 #     <source> [<destination>]
 #     ...
+%files
+    r_packages.R
 
 # %post is the section is where you can download files from the internet with
 # tools like git and wget, install new software and libraries, write
@@ -52,8 +54,11 @@ From: debian:12.4
     apt update
     apt upgrade -y
 
-    # Add a package needed to suppress some debconf error messages
-    apt install -y whiptail
+    # for igraph
+    apt install -y glpk-utils libglpk-dev
+
+    # for sctransform
+    apt install -y libicu-dev
 
     # Install all locales
     apt install -y locales-all
@@ -67,6 +72,7 @@ From: debian:12.4
     apt install -y libmagick++-dev # For cropping images in vignette built following BiocStyle
     apt install -y cmake
     apt install -y libv8-dev libudunits2-dev libgdal-dev # in case one wants to install concaveman for ggforce
+    apt install -y libhdf5-dev # for BPCells
 
     # Install software needed for vignette building and package checks
     apt install -y pandoc qpdf texlive
@@ -113,15 +119,13 @@ From: debian:12.4
     rm $(basename ${RSTUDIO_SERVER_URL})
 
     # Install R packages of general intetest
-    R -e 'install.packages("BiocManager")'
-    R -e 'install.packages("tidyverse")'
-    R -e 'install.packages("devtools")'
-    R -e 'install.packages("remotes")'
-    R -e 'install.packages("rmarkdown")'
+    R -e 'install.packages(c("BiocManager", "remotes"))'
+    Rscript r_packages.R
+    rm r_packages.R
 
     # Use home directory outside image to install more packages
     printf "R_LIBS_SITE=\"/usr/local/lib/R/site-library:/usr/lib/R/library\"\n" | tee -a /etc/R/Renviron.site >/dev/null
-    printf "R_LIBS_USER=\"~/R/library/${R_VERSION}_for_RStudio_Singularity\"\n" | tee -a /etc/R/Renviron.site >/dev/null
+    printf "R_LIBS_USER=\"~/R/library/R_${R_VERSION}_for_RStudio_Singularity\"\n" | tee -a /etc/R/Renviron.site >/dev/null
 
     # Clean downoladed package cache.  Yes I know about /var/libs.
     apt clean
