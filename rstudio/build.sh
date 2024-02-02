@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# Singularity uses /tmp, which is small on some of my servers
+# Create and use a temp directory in ${HOME} instead
+if [[ ! -d ${HOME}/tmp ]]; then
+   mkdir ${HOME}/tmp
+fi
+export TMPDIR=$HOME/tmp
+
 R_VERSION=$(cat ./Singularity.def | grep R_VERSION= | cut -f2 -d'=')
 if [[ -z ${R_VERSION} ]]; then
    echo Could not get R version
