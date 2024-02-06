@@ -7,4 +7,18 @@ if [[ ! -e ${IMG} ]]; then
    exit 1
 fi
 
-singularity run --bind ${HOME}:/home/rstudio ${IMG}
+if [[ ! -e ${HOME}/rstudio ]]; then
+   mkdir ${HOME}/rstudio
+fi
+
+if [[ ! -e ${HOME}/rstudio/.Rprofile ]]; then
+   echo -e '.libPaths("/home/rstudio")' > ${HOME}/rstudio/.Rprofile
+else
+   if grep -q '.libPaths("/home/rstudio")' ${HOME}/rstudio/.Rprofile; then
+      >&2 echo .libPaths already set
+   else
+      echo -e '.libPaths("/home/rstudio")' >> ${HOME}/rstudio/.Rprofile
+   fi
+fi
+
+singularity run --bind ${HOME}/rstudio:/home/rstudio ${IMG}
