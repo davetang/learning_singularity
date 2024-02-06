@@ -332,6 +332,11 @@ access build the image on a machine where you have admin privileges. (I have
 used the full path for singularity because `/usr/local/bin` is not in the
 `PATH` for `root`.)
 
+(The
+[fakeroot](https://docs.sylabs.io/guides/latest/user-guide/fakeroot.html#build)
+option (not used below) lets an unprivileged user build an image from a
+definition file with few restrictions.)
+
 ```console
 singularity build my-image.sif Singularity
 # FATAL:   --remote, --fakeroot, or the proot command are required to build this source as a non-root user
