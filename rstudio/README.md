@@ -1,5 +1,13 @@
 # Running RStudio Server using Singularity
 
+This uses the [verse](https://rocker-project.org/images/versioned/rstudio.html)
+image prepared by the Rocker Project. The RStudio Server setup on that image is
+for the `rstudio` user. The `run.sh` script binds your home directory to
+`/home/rstudio` to get RStudio Server working. One downside of this is that
+installing packages using Singularity will **potentially overwrite your local
+packages** if you also use `${HOME}/R/x86_64-pc-linux-gnu-library/4.3`. One
+easy way to overcome this is simply to change `.libPath`.
+
 Build image.
 
 ```console
@@ -9,26 +17,26 @@ Build image.
 Now run!
 
 ```console
-singularity run rstudio-server-2023.12.1-402-amd64-R-4.3.2.sif
+./run.sh
 ```
 ```
-RStudio URL:            http://localhost:62966/
 RStudio Username:       dtang
-RStudio Password:       d96c3152b71fe32b
-
-You may need to clean your temporary files by yourself:
-RStudio temporary files:        /home/dtang/tmp.C5rfF0uRw3
-
-This image will build its packages in the following directory if it exists:
-R_LIBS_USER="~/R/library/R_4.3.2_for_RStudio_Singularity"
+RStudio Password:       password
+Port:                   8888
 ```
 
-Note that:
+Packages will be installed in `${HOME}/R/x86_64-pc-linux-gnu-library/4.3` by
+default.
 
-1. The server creates temporary files that you need to clean up yourself.
-2. Packages are installed in `~/R/library/R_4.3.2_for_RStudio_Singularity`
+```r
+.libPaths()
+```
+```
+[1] "/home/rstudio/R/x86_64-pc-linux-gnu-library/4.3" "/usr/local/lib/R/site-library"
+[3] "/usr/local/lib/R/library"
+```
 
-# Useful links
+# Other implementations
 
 * Files in this repository based on <https://github.com/oist/BioinfoUgrp/tree/master/RStudio>.
 * Also check out <https://gitlab.oit.duke.edu/chsi-informatics/containers/singularity-rstudio-base>

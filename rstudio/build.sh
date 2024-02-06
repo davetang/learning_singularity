@@ -7,16 +7,10 @@ if [[ ! -d ${HOME}/tmp ]]; then
 fi
 export TMPDIR=$HOME/tmp
 
-R_VERSION=$(cat ./Singularity.def | grep R_VERSION= | cut -f2 -d'=')
+R_VERSION=$(cat ./Singularity.def | grep "rocker/verse" | cut -f3 -d':')
 if [[ -z ${R_VERSION} ]]; then
    echo Could not get R version
    exit 1
 fi
 
-RSTUDIO_VERSION=$(basename $(cat ./Singularity.def | grep RSTUDIO_SERVER_URL= | cut -f2 -d'=') .deb)
-if [[ -z ${RSTUDIO_VERSION} ]]; then
-   echo Could not get RStudio Server version
-   exit 1
-fi
-
-singularity build --fakeroot ${RSTUDIO_VERSION}-R-${R_VERSION}.sif Singularity.def
+singularity build --fakeroot rstudio_server_verse_${R_VERSION}.sif Singularity.def

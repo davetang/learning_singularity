@@ -1,6 +1,10 @@
-#!/bin/sh -e
+#!/usr/bin/env bash
 
-RSTUDIO_TEMP=$(mktemp -d -p ~)
+set -euo pipefail
+
+# -d for create a directory and not a file
+# -p interpret TEMPLATE relative to DIR
+RSTUDIO_TEMP=$(mktemp -d -p /tmp)
 trap "{ rm -rf $RSTUDIO_TEMP; }" EXIT
 
 cat <<__DBCONF__ > $RSTUDIO_TEMP/dbconf
@@ -8,34 +12,20 @@ provider=sqlite
 directory=$RSTUDIO_TEMP/db.sqlite3
 __DBCONF__
 
+export RSTUDIO_PASSWORD=password
+export RSTUDIO_PORT=8888
 
-export RSTUDIO_PASSWORD=${RSTUDIO_PASSWORD-`date -R | md5sum | cut -c-16`}
-
-if [ -z "$RSTUDIO_PORT" ]
-then
-	# Taken from https://gitlab.oit.duke.edu/chsi-informatics/containers/singularity-rstudio-base/-/blob/master/port_and_password_1_3.sh
-	LOWERPORT=50000
-	UPPERPORT=65535
-	for RSTUDIO_PORT in $(seq $LOWERPORT $UPPERPORT);
-	do
-	    RSTUDIO_PORT="`shuf -i $LOWERPORT-$UPPERPORT -n 1`"
-	    # echo "Testing port: $RSTUDIO_PORT"
-	    ss -lpn | grep -q ":$RSTUDIO_PORT " || break
-	done
+if [[ $# > 0 ]]; then
+   export RSTUDIO_PORT=$1
+   if [[ ! ${RSTUDIO_PORT} =~ ^[1-9][0-9]+$ ]]; then
+      >&2 echo ${RSTUDIO_PORT} is not a valid port
+      exit 1
+   fi
 fi
 
-RSTUDIO_HOST=$(hostname -A | cut -f1 -d' ')
-RSTUDIO_HOST=${RSTUDIO_HOST:-localhost}
-
-printf "\nRStudio URL:\t\thttp://${RSTUDIO_HOST}:${RSTUDIO_PORT}/\n"
 printf "RStudio Username:\t$USER\n"
 printf "RStudio Password:\t$RSTUDIO_PASSWORD\n"
-
-printf "\nYou may need to clean your temporary files by yourself:\n"
-printf "RStudio temporary files:\t$RSTUDIO_TEMP\n"
-printf "\nThis image will build its packages in the following directory if it exists:\n"
-grep ^R_LIBS_USER /etc/R/Renviron.site
-printf "\n"
+printf "Port:\t\t\t$RSTUDIO_PORT\n"
 
 /usr/lib/rstudio-server/bin/rserver \
 	--server-working-dir $RSTUDIO_TEMP \
