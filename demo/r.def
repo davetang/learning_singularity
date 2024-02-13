@@ -2,4 +2,4 @@ Bootstrap: docker
 From: rocker/r-ver:4.3.2
 
 %post
-R -q -e 'install.packages("thisdoesnotexist!!!")'
+R -q -e 'tryCatch(message = function(x) stop("Warning message detected"), install.packages("Thisdoesnotexist!@!!"))'
