@@ -1,6 +1,6 @@
 # Build testing
 
-Simple build.
+Simple build with testing.
 
 ```singularity
 Bootstrap: docker
@@ -10,9 +10,56 @@ From: debian:bullseye-slim
     exec /usr/local/bin/hello.sh
 
 %post
-printf '#!/usr/bin/env bash\necho Hi there\n' > /usr/local/bin/hello.sh &&
-chmod 755 /usr/local/bin/hello.sh
+    printf '#!/usr/bin/env bash\necho Hi there\n' > /usr/local/bin/hello.sh \
+    && chmod 755 /usr/local/bin/hello.sh
+
+%test
+    /usr/local/bin/hello.sh
 ```
+
+## Test section
+
+However **only the last command** of the `%test` section matters! Singularity
+continues to build the following image.
+
+```singularity
+Bootstrap: docker
+From: debian:bullseye-slim
+
+%runscript
+    exec /usr/local/bin/hello.sh
+
+%post
+    printf '#!/usr/bin/env bash\necho Hi there\n' > /usr/local/bin/hello.sh \
+    && chmod 755 /usr/local/bin/hello.sh
+
+%test
+    laksdjf
+    echo $?
+    /usr/local/bin/hello.sh
+```
+
+Build.
+
+```singularity
+singularity build --fakeroot --force blah.sif test_demo.def
+```
+```
+INFO:    Starting build...
+INFO:    Running post scriptlet
++ printf #!/usr/bin/env bash\necho Hi there\n
++ chmod 755 /usr/local/bin/hello.sh
+INFO:    Adding runscript
+INFO:    Adding testscript
+INFO:    Running testscript
+/.singularity.d/test: 3: laksdjf: not found
+127
+Hi there
+INFO:    Creating SIF file...
+INFO:    Build complete: blah.sif
+```
+
+## R install.packages()
 
 The following needs to fail but the build continues. (Using
 `remotes::install_cran` is the same but not shown here.)

@@ -9,4 +9,6 @@ From: debian:bullseye-slim
     && chmod 755 /usr/local/bin/hello.sh
 
 %test
+    laksdjf
+    echo $?
     /usr/local/bin/hello.sh
