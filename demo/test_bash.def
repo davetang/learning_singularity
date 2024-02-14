@@ -1,0 +1,16 @@
+Bootstrap: docker
+From: debian:bullseye-slim
+
+%runscript
+    exec /usr/local/bin/hello.sh
+
+%post
+    printf '#!/usr/bin/env bash\necho Hi there\n' > /usr/local/bin/hello.sh \
+    && chmod 755 /usr/local/bin/hello.sh
+
+%test
+    /bin/bash
+    set -e
+    laksdjf
+    echo $?
+    /usr/local/bin/hello.sh

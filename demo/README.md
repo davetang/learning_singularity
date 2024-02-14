@@ -59,6 +59,45 @@ INFO:    Creating SIF file...
 INFO:    Build complete: blah.sif
 ```
 
+The test section is supposed to work like a script. Therefore, we can use Bash
+and the use `set -e` to catch failing commands.
+
+```
+Bootstrap: docker
+From: debian:bullseye-slim
+
+%runscript
+    exec /usr/local/bin/hello.sh
+
+%post
+    printf '#!/usr/bin/env bash\necho Hi there\n' > /usr/local/bin/hello.sh \
+    && chmod 755 /usr/local/bin/hello.sh
+
+%test
+    /bin/bash
+    set -e
+    laksdjf
+    echo $?
+    /usr/local/bin/hello.sh
+```
+
+The build will now fail, as expected.
+
+```singularity
+singularity build --fakeroot --force blah.sif test_bash.def
+```
+```
+INFO:    Starting build...
+INFO:    Running post scriptlet
++ printf #!/usr/bin/env bash\necho Hi there\n
++ chmod 755 /usr/local/bin/hello.sh
+INFO:    Adding runscript
+INFO:    Adding testscript
+INFO:    Running testscript
+/.singularity.d/test: 5: laksdjf: not found
+FATAL:   While performing build: failed to execute %test script: exit status 127
+```
+
 ## R install.packages()
 
 The following needs to fail but the build continues. (Using
