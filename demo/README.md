@@ -41,7 +41,7 @@ From: debian:bullseye-slim
 
 Build.
 
-```singularity
+```console
 singularity build --fakeroot --force blah.sif test_demo.def
 ```
 ```
@@ -62,7 +62,7 @@ INFO:    Build complete: blah.sif
 The test section is supposed to work like a script. Therefore, we can use Bash
 and the use `set -e` to catch failing commands.
 
-```
+```singularity
 Bootstrap: docker
 From: debian:bullseye-slim
 
@@ -83,7 +83,7 @@ From: debian:bullseye-slim
 
 The build will now fail, as expected.
 
-```singularity
+```console
 singularity build --fakeroot --force blah.sif test_bash.def
 ```
 ```
