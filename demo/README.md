@@ -17,6 +17,55 @@ From: debian:bullseye-slim
     /usr/local/bin/hello.sh
 ```
 
+## Symlinks
+
+Create symlink.
+
+```console
+ln -s hi_there.def hi_again.def
+```
+
+Start container.
+
+```console
+singularity shell ../minimal.sif
+ls -al hi_again.def
+```
+```
+lrwxrwxrwx 1 dtang dtang 12 Feb 16 10:55 hi_again.def -> hi_there.def
+```
+
+Using Docker.
+
+```console
+docker run --rm -it -v $(pwd):$(pwd) -w $(pwd) debian:bookworm-slim /bin/bash
+ls -al hi_again.def
+```
+```
+lrwxrwxrwx 1 1000 1000 12 Feb 16 01:55 hi_again.def -> hi_there.def
+```
+
+Bind directory with symlink.
+
+```console
+ln -s $(pwd)/hi_there.def /tmp/hi_from_tmp.def
+singularity shell --bind /tmp:/test ../minimal.sif
+head -1 /test/hi_from_tmp.def
+```
+```
+Bootstrap: docker
+```
+
+With Docker.
+
+```console
+docker run --rm -it -v $(pwd):$(pwd) -v /tmp:/test -w $(pwd) debian:bookworm-slim /bin/bash
+head -1 /test/hi_from_tmp.def
+```
+```
+head: cannot open '/test/hi_from_tmp.def' for reading: Permission denied
+```
+
 ## Test section
 
 However **only the last command** of the `%test` section matters! Singularity
