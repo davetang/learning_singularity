@@ -29,7 +29,7 @@ Singularity forked into
 [SingularityCE](https://sylabs.io/singularity/). Most of my notes here were
 written before I knew about the fork and are based on using SingularityCE.
 
-The Hellow World example works the same for `apptainer`.
+The Hello World example works the same for `apptainer`.
 
 ```console
 wget https://github.com/apptainer/apptainer/releases/download/v1.2.5/apptainer_1.2.5_amd64.deb
@@ -81,6 +81,13 @@ Import Docker image; image will be saved as `tidyverse_4.3.2.sif`.
 
 ```console
 singularity pull docker://rocker/tidyverse:4.3.2
+```
+
+Build an image, where `minimal.sif` is the image name and `bookworm_slim.def`
+is the Definition File, which is like the Dockerfile for Docker..
+
+```console
+singularity build --fakeroot --force minimal.sif bookworm_slim.def
 ```
 
 Run container.

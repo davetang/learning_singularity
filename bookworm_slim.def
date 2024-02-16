@@ -1,0 +1,13 @@
+Bootstrap: docker
+From: debian:bookworm-slim
+
+%environment
+    export PATH=$PATH:$HOME/bin
+
+%labels
+    AUTHOR Dave Tang
+
+%post
+    apt update \
+    && apt upgrade -y \
+    && apt clean
