@@ -19,7 +19,7 @@ From: debian:bullseye-slim
 
 ## Symlinks
 
-Create symlink.
+Create symlink in the same directory.
 
 ```console
 ln -s hi_there.def hi_again.def
@@ -29,23 +29,24 @@ Start container.
 
 ```console
 singularity shell ../minimal.sif
-ls -al hi_again.def
+head -1 hi_again.def
 ```
 ```
-lrwxrwxrwx 1 dtang dtang 12 Feb 16 10:55 hi_again.def -> hi_there.def
+Bootstrap: docker
 ```
 
 Using Docker.
 
 ```console
 docker run --rm -it -v $(pwd):$(pwd) -w $(pwd) debian:bookworm-slim /bin/bash
-ls -al hi_again.def
+head -1 hi_again.def
 ```
 ```
-lrwxrwxrwx 1 1000 1000 12 Feb 16 01:55 hi_again.def -> hi_there.def
+Bootstrap: docker
 ```
 
-Bind directory with symlink.
+Create symlink is different directory but bind the other directory containing
+the symlink.
 
 ```console
 ln -s $(pwd)/hi_there.def /tmp/hi_from_tmp.def
