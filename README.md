@@ -6,7 +6,7 @@ Table of Contents
    * [TL;DR](#tldr)
    * [Installation](#installation)
       * [CentOS/RHEL 7](#centosrhel-7)
-      * [Debian 11](#debian-11)
+      * [Debian](#debian)
       * [General steps](#general-steps)
       * [Docker](#docker)
       * [macOS with Apple Silicon](#apple-silicon)
@@ -145,22 +145,24 @@ sudo yum install -y \
     wget
 ```
 
-### Debian 11
+### Debian
 
 [Installing](https://github.com/sylabs/singularity/blob/main/INSTALL.md) on
-Debian 11.
+Debian.
 
 ```console
 cat /etc/os-release
-# PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
-# NAME="Debian GNU/Linux"
-# VERSION_ID="11"
-# VERSION="11 (bullseye)"
-# VERSION_CODENAME=bullseye
-# ID=debian
-# HOME_URL="https://www.debian.org/"
-# SUPPORT_URL="https://www.debian.org/support"
-# BUG_REPORT_URL="https://bugs.debian.org/"
+```
+```
+PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+NAME="Debian GNU/Linux"
+VERSION_ID="12"
+VERSION="12 (bookworm)"
+VERSION_CODENAME=bookworm
+ID=debian
+HOME_URL="https://www.debian.org/"
+SUPPORT_URL="https://www.debian.org/support"
+BUG_REPORT_URL="https://bugs.debian.org/"
 ```
 
 Install dependencies.
@@ -168,19 +170,25 @@ Install dependencies.
 ```console
 # Ensure repositories are up-to-date
 sudo apt-get update
-
 # Install debian packages for dependencies
 sudo apt-get install -y \
-    build-essential \
-    libseccomp-dev \
-    libglib2.0-dev \
-    pkg-config \
-    squashfs-tools \
+    autoconf \
+    automake \
     cryptsetup \
-    crun \
-    uidmap \
+    fuse2fs \
     git \
-    wget
+    fuse \
+    libfuse-dev \
+    libglib2.0-dev \
+    libseccomp-dev \
+    libtool \
+    pkg-config \
+    runc \
+    squashfs-tools \
+    squashfs-tools-ng \
+    uidmap \
+    wget \
+    zlib1g-dev
 ```
 
 ### General steps
@@ -188,7 +196,7 @@ sudo apt-get install -y \
 Download Go and add to `PATH`.
 
 ```console
-export VERSION=1.20.4 OS=linux ARCH=amd64  # change this as you need
+export VERSION=1.21.6 OS=linux ARCH=amd64  # change this as you need
 
 wget -O /tmp/go${VERSION}.${OS}-${ARCH}.tar.gz \
   https://dl.google.com/go/go${VERSION}.${OS}-${ARCH}.tar.gz
@@ -203,7 +211,7 @@ Clone repository.
 ```console
 git clone --recurse-submodules https://github.com/sylabs/singularity.git
 cd singularity
-git checkout --recurse-submodules v3.11.3
+git checkout --recurse-submodules v4.1.1
 ```
 
 Configure, build, and install.
@@ -221,7 +229,7 @@ which singularity
 # /usr/local/bin/singularity
 
 singularity --version
-# singularity-ce version 3.11.3
+# singularity-ce version 4.1.1
 ```
 
 ### Docker
