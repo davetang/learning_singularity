@@ -33,6 +33,24 @@ but this is bound/mounted to `${HOME}/rstudio` on the host.
 [1] "/home/rstudio" "/usr/local/lib/R/site-library" "/usr/local/lib/R/library"
 ```
 
+# User package directory
+
+Another way to manage the user's package directory is via `R_LIBS_USER`. To prevent using packages installed in the user's home directory, which gets mounted automatically by Singularity, `/home/rstudio_session` is created and hopefully does not exist.
+
+```
+mkdir -p /home/rstudio_session
+printf 'R_LIBS_USER="/home/rstudio_session"\n' >> /usr/local/lib/R/etc/Renviron.site
+```
+
+If R is running inside the container made with the image definition above, `.libPaths()` will return `/home/rstudio_session`.
+
+```r
+.libPaths()
+```
+```
+[1] "/home/rstudio_session"         "/usr/local/lib/R/site-library" "/usr/local/lib/R/library"
+```
+
 # Other implementations
 
 * Files in this repository based on <https://github.com/oist/BioinfoUgrp/tree/master/RStudio>.
