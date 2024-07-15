@@ -266,6 +266,42 @@ singularity --version
 singularity run library://lolcow
 ```
 
+[Alternatively](https://docs.sylabs.io/guides/4.1/admin-guide/installation.html#mac), use the [Lima](https://github.com/lima-vm/lima) VM platform.
+
+1. Install [Homebrew](https://brew.sh/)
+
+```console
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+2. Install Lima.
+
+```console
+brew install lima
+```
+
+3. Download example template for using SingularityCE with Lima. The template
+
+* Is based on AlmaLinux 9.
+* Supports both Intel and Apple Silicon (ARM64) Macs.
+* Installs the latest stable release of SingularityCE that has been published to the Fedora EPEL repositories.
+
+```console
+wget https://raw.githubusercontent.com/sylabs/singularity/main/examples/lima/singularity-ce.yml
+```
+
+4. Start a Lima VM:
+
+```console
+limactl start ./singularity-ce.yml
+```
+
+5. Run `singularity` inside your Lima VM:
+
+```console
+limactl shell singularity-ce singularity run library://alpine
+```
+
 ## Getting started
 
 Following the getting started guide from the [Nextflow
