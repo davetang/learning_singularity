@@ -1,21 +1,19 @@
-Table of Contents
-=================
+## Table of Contents
 
-* [README](#readme)
-   * [Fork](#fork)
-   * [TL;DR](#tldr)
-   * [Installation](#installation)
-      * [CentOS/RHEL 7](#centosrhel-7)
-      * [Debian](#debian)
-      * [General steps](#general-steps)
-      * [Docker](#docker)
-      * [macOS with Apple Silicon](#apple-silicon)
-   * [Getting started](#getting-started)
-      * [Images](#images)
-   * [BioContainers](#biocontainers)
-   * [Troubleshooting](#troubleshooting)
-
-<!-- Created by https://github.com/ekalinin/github-markdown-toc -->
+- [README](#readme)
+  - [Fork](#fork)
+  - [TL;DR](#tldr)
+  - [Installation](#installation)
+    - [CentOS/RHEL 7](#centosrhel-7)
+    - [Debian](#debian)
+    - [General steps](#general-steps)
+    - [Docker](#docker)
+    - [Apple Silicon](#apple-silicon)
+  - [Getting started](#getting-started)
+    - [Images](#images)
+  - [BioContainers](#biocontainers)
+  - [Limiting Container Resources](#limiting-container-resources)
+  - [Troubleshooting](#troubleshooting)
 
 # README
 
@@ -597,6 +595,22 @@ MEME.
 singularity pull docker://quay.io/biocontainers/meme:5.5.2--py310pl5321h2bc4914_1
 singularity exec meme_5.5.2--py310pl5321h2bc4914_1.sif meme -version
 # 5.5.2
+```
+
+## Limiting Container Resources
+
+There are three ways to apply [limits to a container](https://docs.sylabs.io/guides/main/user-guide/cgroups.html) that is run with SingularityCE:
+
+* Using the command line flags introduced in v3.10.
+    * Using `--cpus` sets the [number of CPUs](https://docs.sylabs.io/guides/main/user-guide/cgroups.html#cpu-limits), or fractional CPUs, that the container can use.
+    * Using `--memory` sets the [maximum amount of RAM](https://docs.sylabs.io/guides/main/user-guide/cgroups.html#memory-limits) that a container can use, in bytes. You can use suffixes such as M or G to specify megabytes or gigabytes.
+* Using the --apply-cgroups flag to apply a cgroups.toml file that defines the resource limits.
+* Using external tools such as systemd-run tool to apply limits, and then call singularity.
+
+Example of using command line flags.
+
+```console
+singularity exec --memory 4G --cpus 2 image.sif command
 ```
 
 ## Troubleshooting
