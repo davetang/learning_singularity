@@ -302,6 +302,52 @@ limactl start ./singularity-ce.yml
 limactl shell singularity-ce singularity run library://alpine
 ```
 
+Build images.
+
+```console
+limactl shell singularity-ce singularity build --fakeroot test.sif bookworm_slim.def
+```
+```
+FATAL:   While performing build: while creating SIF: while creating container: open test.sif: read-only file system
+```
+
+Use `sudo`.
+
+```console
+sudo limactl shell singularity-ce singularity build --fakeroot test.sif bookworm_slim.def
+```
+```
+FATA[0000] must not run as the root
+```
+
+Edit `vi ~/.lima/singularity-ce/lima.yaml` and add writable to `/tmp/lima`.
+
+```
+mounts:
+  - location: "~"
+  - location: "/tmp/lima"
+    writable: true
+```
+
+Restart Lima.
+
+```console
+limactl stop singularity-ce
+limactl start singularity-ce
+```
+
+Build in `/tmp/lima`.
+
+```console
+limactl shell singularity-ce singularity build --fakeroot /tmp/lima/test.sif bookworm_slim.def
+```
+
+Success!
+
+```
+limactl shell singularity-ce singularity shell /tmp/lima/test.sif
+```
+
 ## Getting started
 
 Following the getting started guide from the [Nextflow
