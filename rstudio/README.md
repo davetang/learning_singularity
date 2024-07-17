@@ -55,3 +55,7 @@ If R is running inside the container made with the image definition above, `.lib
 
 * Files in this repository based on <https://github.com/oist/BioinfoUgrp/tree/master/RStudio>.
 * Also check out <https://gitlab.oit.duke.edu/chsi-informatics/containers/singularity-rstudio-base>
+
+# Troubleshooting
+
+Singularity mounts `${HOME}` by default and therefore can read and write to `~/.local/share/rstudio/`. To start RStudio in a clean session, delete this directory; this is useful when RStudio becomes stuck when it is trying to be restore a problematic session (like one with too much text output!).
