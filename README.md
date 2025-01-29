@@ -12,6 +12,7 @@
   - [Getting started](#getting-started)
     - [Images](#images)
   - [BioContainers](#biocontainers)
+  - [Running services](#running-services)
   - [Limiting Container Resources](#limiting-container-resources)
   - [Troubleshooting](#troubleshooting)
 
