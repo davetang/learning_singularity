@@ -38,3 +38,10 @@ biological data. It involves the use of computational tools and methods to under
 living organisms.
 ...
 ```
+
+Stop instance when you're done (and confirm that it has been stopped).
+
+```console
+singularity instance stop ollama_serve
+singularity instance list
+```
