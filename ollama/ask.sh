@@ -15,7 +15,6 @@ INSTANCE_NAME=ollama_instance
 
 # find models at https://ollama.com/library
 MODEL=deepseek-r1:32b
-MODEL=llama3.2
 
 FOUND=0
 if singularity instance list | grep -q ${INSTANCE_NAME}; then
@@ -27,7 +26,7 @@ if [[ ${FOUND} == 1 ]]; then
 else
    >&2 echo Could not find ${INSTANCE_NAME}
    >&2 echo Starting ${INSTANCE_NAME}
-   singularity instance start ollama.sif ${INSTANCE_NAME}
+   singularity instance start ollama.sif ${INSTANCE_NAME} > /dev/null
    sleep 5
 fi
 
