@@ -597,6 +597,16 @@ singularity exec meme_5.5.2--py310pl5321h2bc4914_1.sif meme -version
 # 5.5.2
 ```
 
+## Running services
+
+From [Instances - Running Services](https://docs.sylabs.io/guides/4.2/user-guide/running_services.html):
+
+> SingularityCE is most commonly used to run containers interactively, or in a batch job, where the container runs in the foreground, performs some work, and then exits. There are different ways in which you can run SingularityCE containers in the foreground. If you use run, exec and shell to interact with processes in the container, then you are running SingularityCE containers in the foreground.
+>
+> SingularityCE, also allows you to run containers in a “detached” or “daemon” mode where the container runs a service. A “service” is essentially a process running in the background that multiple different clients can use. For example, a web server or a database.
+>
+> A SingularityCE container running a service in the background is called an instance, to distinguish it from the default mode which runs containers in the foreground.
+
 ## Limiting Container Resources
 
 There are three ways to apply [limits to a container](https://docs.sylabs.io/guides/main/user-guide/cgroups.html) that is run with SingularityCE:
