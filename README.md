@@ -615,11 +615,15 @@ singularity exec --memory 4G --cpus 2 image.sif command
 
 ## Troubleshooting
 
-If you get a "No space left on device error", check the size of `/tmp`
-directory. Singularity [will
-use](https://docs.sylabs.io/guides/2.5/user-guide/troubleshooting.html#no-space-left-on-device)
-the `TMPDIR` environment variable, so set it to a location with more space.
+If you get a "No space left on device error", check the size of `/tmp` directory. Singularity [will use](https://docs.sylabs.io/guides/2.5/user-guide/troubleshooting.html#no-space-left-on-device) the `TMPDIR` environment variable, so set it to a location with more space.
 
 ```console
 export TMPDIR=$HOME/tmp
+```
+
+You can also set the following environment variables.
+
+```
+export SINGULARITY_TMPDIR=/dir/with/more/space
+export SINGULARITY_CACHEDIR=/dir/with/more/space
 ```
