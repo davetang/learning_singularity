@@ -634,6 +634,12 @@ singularity exec --net --network none image.sif curl --output test.bed https://d
                                  Dload  Upload   Total   Spent    Left  Speed
   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: davetang.org
 ```
+```console
+singularity exec --net --network none ollama.sif curl -I 23.196.3.208
+```
+```
+curl: (7) Failed to connect to 23.196.3.208 port 80 after 0 ms: Couldn't connect to server
+```
 
 ## Troubleshooting
 
