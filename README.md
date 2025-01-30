@@ -624,6 +624,17 @@ Example of using command line flags.
 singularity exec --memory 4G --cpus 2 image.sif command
 ```
 
+[Restrict network access of a container](https://github.com/apptainer/singularity/issues/1634).
+
+```console
+singularity exec --net --network none image.sif curl --output test.bed https://davetang.org/file/test.bed
+```
+```
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: davetang.org
+```
+
 ## Troubleshooting
 
 If you get a "No space left on device error", check the size of `/tmp` directory. Singularity [will use](https://docs.sylabs.io/guides/2.5/user-guide/troubleshooting.html#no-space-left-on-device) the `TMPDIR` environment variable, so set it to a location with more space.
