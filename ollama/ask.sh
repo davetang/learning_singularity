@@ -26,12 +26,12 @@ if [[ ${FOUND} == 1 ]]; then
 else
    >&2 echo Could not find ${INSTANCE_NAME}
    >&2 echo Starting ${INSTANCE_NAME}
-   singularity instance start ollama.sif ${INSTANCE_NAME} > /dev/null
+   singularity instance start --net --network none ollama.sif ${INSTANCE_NAME} > /dev/null
    sleep 5
 fi
 
 >&2 echo Running query
-singularity exec instance://${INSTANCE_NAME} ollama run ${MODEL} "${PROMPT}"
+singularity exec --net --network none instance://${INSTANCE_NAME} ollama run ${MODEL} "${PROMPT}"
 
 >&2 echo Stopping ${INSTANCE_NAME}
 singularity instance stop ${INSTANCE_NAME}
