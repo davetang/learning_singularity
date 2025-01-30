@@ -17,6 +17,9 @@ INSTANCE_NAME=ollama_instance
 MODEL=deepseek-r1:32b
 
 FOUND=0
+
+trap '>&2 echo "Script terminated"; singularity instance stop ${INSTANCE_NAME} &> /dev/null; exit 1' INT TERM
+
 if singularity instance list | grep -q ${INSTANCE_NAME}; then
    FOUND=1
 fi
@@ -26,13 +29,22 @@ if [[ ${FOUND} == 1 ]]; then
 else
    >&2 echo Could not find ${INSTANCE_NAME}
    >&2 echo Starting ${INSTANCE_NAME}
-   singularity instance start --net --network none ollama.sif ${INSTANCE_NAME} > /dev/null
+   if ! singularity instance start --net --network none ollama.sif ${INSTANCE_NAME} > /dev/null; then
+      >&2 echo "Error: failed to start instance"
+      exit 1
+   fi
    sleep 5
 fi
 
->&2 echo Running query
-singularity exec --net --network none instance://${INSTANCE_NAME} ollama run ${MODEL} "${PROMPT}"
+>&2 echo "Running query..."
+if ! singularity exec --net --network none instance://${INSTANCE_NAME} ollama run ${MODEL} "${PROMPT}"; then
+    >&2 echo "Error: Failed to run Ollama model."
+    exit 1
+fi
 
->&2 echo Stopping ${INSTANCE_NAME}
-singularity instance stop ${INSTANCE_NAME}
+if [[ ${FOUND} -eq 0 ]]; then
+   >&2 echo "Stopping instance: ${INSTANCE_NAME}"
+   singularity instance stop ${INSTANCE_NAME}
+fi
+
 >&2 echo Done
