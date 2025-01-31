@@ -16,6 +16,7 @@ INSTANCE_NAME=ollama_instance
 # find models at https://ollama.com/library
 MODEL=deepseek-r1:32b
 
+SCRIPT_DIR=$(dirname $(realpath $0))
 FOUND=0
 
 trap '>&2 echo "Script terminated"; singularity instance stop ${INSTANCE_NAME} &> /dev/null; exit 1' INT TERM
@@ -29,7 +30,7 @@ if [[ ${FOUND} == 1 ]]; then
 else
    >&2 echo Could not find ${INSTANCE_NAME}
    >&2 echo Starting ${INSTANCE_NAME}
-   if ! singularity instance start --net --network none ollama.sif ${INSTANCE_NAME} > /dev/null; then
+   if ! singularity instance start --net --network none ${SCRIPT_DIR}/ollama.sif ${INSTANCE_NAME} > /dev/null; then
       >&2 echo "Error: failed to start instance"
       exit 1
    fi
