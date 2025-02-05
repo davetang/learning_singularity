@@ -1,0 +1,16 @@
+Bootstrap: docker
+From: debian:bullseye-slim
+
+%runscript
+    fortune | cowsay
+    exec fortune | cowsay
+
+%post
+    apt-get update
+    apt-get -y install fortune cowsay locales
+    localedef -i en_US -f UTF-8 en_US.UTF-8
+
+%environment
+    export PATH=$PATH:/usr/games
+    export LC_ALL=en_US.UTF-8
+    export LANG=en_US.UTF-8
