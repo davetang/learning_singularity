@@ -13,6 +13,7 @@
     - [Images](#images)
   - [BioContainers](#biocontainers)
   - [Running services](#running-services)
+  - [Isolation](#isolation)
   - [Limiting Container Resources](#limiting-container-resources)
   - [Troubleshooting](#troubleshooting)
 
@@ -607,6 +608,33 @@ From [Instances - Running Services](https://docs.sylabs.io/guides/4.2/user-guide
 > SingularityCE, also allows you to run containers in a “detached” or “daemon” mode where the container runs a service. A “service” is essentially a process running in the background that multiple different clients can use. For example, a web server or a database.
 >
 > A SingularityCE container running a service in the background is called an instance, to distinguish it from the default mode which runs containers in the foreground.
+
+## Isolation
+
+One of the main goals of using containerisation software is for reproducibility. To ensure that the analysis environment is not polluted with a user's workspace here are some useful arguments.
+
+* Use `--containall` to prevent the container from reading or writing from the host.
+
+```console
+# build image for demo
+singularity build --fakeroot --force minimal.sif bookworm_slim.def
+
+# lists out files in my home directory
+singularity exec minimal.sif ls $HOME
+
+singularity exec --containall minimal.sif ls $HOME
+# no output
+```
+
+* Use `--cleanenv` to prevent the container from inheriting most of the environment variables from the host.
+
+```console
+# lists out my environment variables
+singularity exec minimal.sif ls $HOME
+
+singularity exec --cleanenv minimal.sif env
+# no host environment variables
+```
 
 ## Limiting Container Resources
 
