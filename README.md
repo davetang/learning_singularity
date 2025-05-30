@@ -614,6 +614,23 @@ Singularity> echo $MYENV
 test
 ```
 
+`%labels`.
+
+```console
+singularity inspect sections.sif
+```
+```
+AUTHOR: Dave Tang
+org.label-schema.build-arch: amd64
+org.label-schema.build-date: Friday_30_May_2025_16:5:48_JST
+org.label-schema.schema-version: 1.0
+org.label-schema.usage: /.singularity.d/runscript.help
+org.label-schema.usage.singularity.deffile.bootstrap: docker
+org.label-schema.usage.singularity.deffile.from: debian:bookworm-slim
+org.label-schema.usage.singularity.runscript.help: /.singularity.d/runscript.help
+org.label-schema.usage.singularity.version: 4.1.3
+```
+
 ## BioContainers
 
 Run
