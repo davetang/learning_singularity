@@ -9,6 +9,8 @@
     - [General steps](#general-steps)
     - [Docker](#docker)
     - [Apple Silicon](#apple-silicon)
+  - [Apptainer](#apptainer)
+    - [Debian](#debian)
   - [Getting started](#getting-started)
     - [Images](#images)
   - [Definition file](#definition-file)
@@ -347,6 +349,26 @@ Success!
 
 ```
 limactl shell singularity-ce singularity shell /tmp/lima/test.sif
+```
+
+## Apptainer
+
+> [Apptainer](https://apptainer.org/docs/user/latest/introduction.html) is a container platform. It allows you to create and run containers that package up pieces of software in a way that is portable and reproducible. You can build a container using Apptainer on your laptop, and then run it on many of the largest HPC clusters in the world, local university or company clusters, a single server, in the cloud, or on a workstation down the hall. Your container is a single file, and you don’t have to worry about how to install all the software you need on each different operating system.
+
+### Debian
+
+[Install](https://apptainer.org/docs/admin/main/installation.html#install-debian-packages) using pre-built Debian packages (only available on GitHub and only for the amd64 architecture).
+
+```console
+cd /tmp
+wget https://github.com/apptainer/apptainer/releases/download/v1.4.1/apptainer_1.4.1_amd64.deb
+sudo apt install -y ./apptainer_1.4.1_amd64.deb
+rm apptainer_1.4.1_amd64.deb
+
+apptainer version
+```
+```
+1.4.1
 ```
 
 ## Getting started
