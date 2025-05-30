@@ -1,0 +1,26 @@
+Bootstrap: docker
+From: debian:bookworm-slim
+
+%labels
+    AUTHOR Dave Tang
+
+%help
+    This container is a demo
+
+%setup
+    >&2 echo "This runs outside the container on the host, before %post."
+
+%files
+    LICENSE /opt/
+
+%environment
+    export PATH=$PATH:$HOME/bin
+    export MYENV=test
+
+%runscript
+    >&2 echo "Hi $@"
+
+%post
+    apt update \
+    && apt upgrade -y \
+    && apt clean

@@ -11,6 +11,7 @@
     - [Apple Silicon](#apple-silicon)
   - [Getting started](#getting-started)
     - [Images](#images)
+  - [Definition file](#definition-file)
   - [BioContainers](#biocontainers)
   - [Running services](#running-services)
   - [Isolation](#isolation)
@@ -537,6 +538,80 @@ cat /etc/os-release
 # PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
 # UBUNTU_CODENAME=lunar
 # LOGO=ubuntu-logo
+```
+
+## Definition file
+
+`sections.def` shows some sections inside a Singularity Definition File.
+
+```
+Bootstrap: docker
+From: debian:bookworm-slim
+
+%labels
+    AUTHOR Dave Tang
+
+%help
+    This container is a demo
+
+%setup
+    >&2 echo "This runs outside the container on the host, before %post."
+
+%files
+    LICENSE /opt/
+
+%environment
+    export PATH=$PATH:$HOME/bin
+    export MYENV=test
+
+%runscript
+    >&2 echo "Hi $@"
+
+%post
+    apt update \
+    && apt upgrade -y \
+    && apt clean
+```
+
+Build image.
+
+```console
+singularity build --fakeroot --force sections.sif sections.def
+```
+
+`%runscript`.
+
+```console
+singularity run sections.sif doctor Jones
+```
+```
+Hi doctor Jones
+```
+
+`%help`.
+
+```console
+singularity run-help sections.sif
+```
+```
+    This container is a demo
+```
+
+`%files`.
+
+```console
+singularity exec sections.sif ls /opt
+```
+```
+LICENSE
+```
+
+`%environment`.
+
+```console
+singularity shell sections.sif
+Singularity> echo $MYENV
+test
 ```
 
 ## BioContainers
