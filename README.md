@@ -19,6 +19,7 @@
   - [Isolation](#isolation)
   - [Limiting Container Resources](#limiting-container-resources)
   - [Troubleshooting](#troubleshooting)
+  - [Tips](#tips)
 
 # README
 
@@ -796,4 +797,15 @@ You can also set the following environment variables.
 ```
 export SINGULARITY_TMPDIR=/dir/with/more/space
 export SINGULARITY_CACHEDIR=/dir/with/more/space
+```
+
+## Tips
+
+Create an environment variable using `--env`.
+
+```console
+singularity exec --env BLAH=1984 minimal.sif bash -c 'env | grep BLAH'
+```
+```
+BLAH=1984
 ```
