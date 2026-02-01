@@ -13,6 +13,13 @@
     - [Debian](#debian)
   - [Getting started](#getting-started)
     - [Images](#images)
+  - [Sandbox mode](#sandbox-mode)
+    - [Creating a sandbox](#creating-a-sandbox)
+    - [Working inside the sandbox](#working-inside-the-sandbox)
+    - [Converting a sandbox to a SIF image](#converting-a-sandbox-to-a-sif-image)
+    - [Building a sandbox from a definition file](#building-a-sandbox-from-a-definition-file)
+    - [Cleaning up](#cleaning-up)
+    - [Sandbox vs definition file workflow](#sandbox-vs-definition-file-workflow)
   - [Definition file](#definition-file)
   - [BioContainers](#biocontainers)
   - [Running services](#running-services)
@@ -563,6 +570,124 @@ cat /etc/os-release
 # LOGO=ubuntu-logo
 ```
 
+## Sandbox mode
+
+A sandbox is a writable directory structure that represents a container. Unlike SIF files which are read-only, sandboxes allow you to interactively modify the container's filesystem. This is useful for:
+
+* Debugging failed builds by testing commands interactively
+* Experimenting with package installations before writing a definition file
+* Developing containers incrementally when you're unsure of all dependencies
+
+### Creating a sandbox
+
+Use `--sandbox` to create a writable directory instead of a SIF file.
+
+```console
+singularity build --sandbox my_sandbox/ docker://debian:bookworm-slim
+```
+```
+INFO:    Starting build...
+INFO:    Fetching OCI image...
+26.9MiB / 26.9MiB [===========================================================================================================================================================================] 100 % 11.6 MiB/s 0s
+INFO:    Extracting OCI image...
+INFO:    Inserting Singularity configuration...
+INFO:    Creating sandbox directory...
+INFO:    Build complete: my_sandbox/
+```
+
+This creates a directory `my_sandbox/` containing the full container filesystem.
+
+```console
+ls my_sandbox/
+```
+```
+bin
+boot
+dev
+environment
+etc
+home
+lib
+lib64
+media
+mnt
+opt
+proc
+root
+run
+sbin
+singularity
+srv
+sys
+tmp
+usr
+var
+```
+
+### Working inside the sandbox
+
+Use `--writable` to enter the sandbox with write permissions.
+
+```console
+singularity shell --fakeroot --writable my_sandbox/
+```
+
+Now you can install packages and make changes that persist.
+
+```console
+Singularity> apt update && apt install -y cowsay
+Singularity> /usr/games/cowsay "Tada!"
+```
+```
+________
+< Tada! >
+ -------
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
+```
+
+The changes persist in the sandbox directory. You can re-enter and continue where you left off.
+
+### Converting a sandbox to a SIF image
+
+Once you're satisfied with your sandbox, convert it to a production SIF image.
+
+```console
+singularity build --fakeroot my_image.sif my_sandbox/
+```
+
+### Building a sandbox from a definition file
+
+You can also build a sandbox from a definition file, which is helpful for debugging failing builds.
+
+```console
+singularity build --fakeroot --sandbox my_sandbox/ my_definition.def
+```
+
+If the build fails partway through, the sandbox will contain the state at the point of failure, allowing you to enter it and debug.
+
+### Cleaning up
+
+Sandboxes can take up significant disk space since they contain the full extracted filesystem. Remove them when no longer needed.
+
+```console
+rm -rf my_sandbox/
+```
+
+### Sandbox vs definition file workflow
+
+| Sandbox                      | Definition File             |
+|------------------------------|-----------------------------|
+| Interactive, trial-and-error | Scripted, reproducible      |
+| Good for exploration         | Good for production         |
+| Changes are manual           | Changes are documented      |
+| Hard to reproduce exactly    | Easy to rebuild identically |
+
+A common workflow is to experiment in a sandbox, then translate your successful commands into a definition file for reproducibility.
+
 ## Definition file
 
 `sections.def` shows some sections inside a Singularity Definition File.
@@ -656,8 +781,7 @@ org.label-schema.usage.singularity.version: 4.1.3
 
 ## BioContainers
 
-Run
-[BioContainers](https://biocontainers-edu.readthedocs.io/en/latest/what_is_biocontainers.html)
+Run (https://biocontainers-edu.readthedocs.io/en/latest/what_is_biocontainers.html)
 containers. To look for a container, go to the [BioContainers organisation
 page](https://quay.io/organization/biocontainers) and wait for all the
 containers to load on the page; this takes several minutes because there's a
