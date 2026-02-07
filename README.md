@@ -30,15 +30,11 @@
 
 # README
 
-Learning about Singularity (the container platform and not the technological
-singularity).
+Learning about Singularity (the container platform and not the technological singularity).
 
 ## Fork
 
-Singularity forked into
-[Apptainer](https://apptainer.org/news/community-announcement-20211130/) and
-[SingularityCE](https://sylabs.io/singularity/). Most of my notes here were
-written before I knew about the fork and are based on using SingularityCE.
+Singularity forked into [Apptainer](https://apptainer.org/news/community-announcement-20211130/) and [SingularityCE](https://sylabs.io/singularity/). Most of my notes here were written before I knew about the fork and are based on using SingularityCE.
 
 The Hello World example works the same for `apptainer`.
 
@@ -94,8 +90,7 @@ Import Docker image; image will be saved as `tidyverse_4.3.2.sif`.
 singularity pull docker://rocker/tidyverse:4.3.2
 ```
 
-Build an image, where `minimal.sif` is the image name and `bookworm_slim.def`
-is the Definition File, which is like the Dockerfile for Docker..
+Build an image, where `minimal.sif` is the image name and `bookworm_slim.def` is the Definition File, which is like the Dockerfile for Docker.
 
 ```console
 singularity build --fakeroot --force minimal.sif bookworm_slim.def
@@ -130,17 +125,11 @@ singularity exec --bind ${HOME}/github/learning_singularity:/mnt my-image.sif ls
 
 ## Installation
 
-[SingularityCE](https://github.com/sylabs/singularity) is the Community Edition
-of Singularity and is licensed under a [BSD
-3-Clause](https://github.com/sylabs/singularity/blob/main/LICENSE.md).
-Installation is the same for different flavours of Linux except when installing
-dependencies since different distros use different package managers.
+[SingularityCE](https://github.com/sylabs/singularity) is the Community Edition of Singularity and is licensed under a [BSD 3-Clause](https://github.com/sylabs/singularity/blob/main/LICENSE.md). Installation is the same for different flavours of Linux except when installing dependencies since different distros use different package managers.
 
 ### CentOS/RHEL 7
 
-[Installing](https://github.com/sylabs/singularity/blob/main/INSTALL.md) on
-CentOS/RHEL 7. (I have left out Git, so please include it back if you do not
-have Git installed.)
+[Installing](https://github.com/sylabs/singularity/blob/main/INSTALL.md) on CentOS/RHEL 7. (I have left out Git, so please include it back if you do not have Git installed.)
 
 ```console
 # Install basic tools for compiling
@@ -158,8 +147,7 @@ sudo yum install -y \
 
 ### Debian
 
-[Installing](https://github.com/sylabs/singularity/blob/main/INSTALL.md) on
-Debian.
+[Installing](https://github.com/sylabs/singularity/blob/main/INSTALL.md) on Debian.
 
 ```console
 cat /etc/os-release
@@ -381,37 +369,24 @@ apptainer version
 
 ## Getting started
 
-Following the getting started guide from the [Nextflow
-tutorial](https://training.nextflow.io/basic_training/containers/#singularity).
+Following the getting started guide from the [Nextflow tutorial](https://training.nextflow.io/basic_training/containers/#singularity).
 
-Singularity is a container runtime designed to work in high-performance
-computing data centers, where the usage of Docker is generally not allowed due
-to security reasons.
+Singularity is a container runtime designed to work in high-performance computing data centers, where the usage of Docker is generally not allowed due to security reasons.
 
-Singularity implements a container execution model similar to Docker but it
-uses a completely different implementation design.
+Singularity implements a container execution model similar to Docker but it uses a completely different implementation design.
 
-A Singularity container image is archived as a plain file that can be stored in
-a shared file system and accessed by many computing nodes managed using a batch
-scheduler.
+A Singularity container image is archived as a plain file that can be stored in a shared file system and accessed by many computing nodes managed using a batch scheduler.
 
 ### Images
 
 There are two ways to building Singularity images:
 
-1. Building within a sandbox: build a container interactively within a sandbox
-   environment
-2. Building using a Singularity Definition File, which should be preferred
-   since this is more reproducible.
+1. Building within a sandbox: build a container interactively within a sandbox environment
+2. Building using a Singularity Definition File, which should be preferred since this is more reproducible.
 
-The [Singularity Definition
-File](https://docs.sylabs.io/guides/latest/user-guide/definition_files.html) is
-similar to the `Dockerfile` for Docker but uses a different syntax. See
-[Singularity Definition file versus
-Dockerfile](https://docs.sylabs.io/guides/3.7/user-guide/singularity_and_docker.html#singularity-definition-file-vs-dockerfile).
+The [Singularity Definition File](https://docs.sylabs.io/guides/latest/user-guide/definition_files.html) is similar to the `Dockerfile` for Docker but uses a different syntax. See [Singularity Definition file versus Dockerfile](https://docs.sylabs.io/guides/3.7/user-guide/singularity_and_docker.html#singularity-definition-file-vs-dockerfile).
 
-Sections (a.k.a. scriptlets or blobs) in the definition file are specified
-using a `%` prefix followed by the name of the section and are optional.
+Sections (a.k.a. scriptlets or blobs) in the definition file are specified using a `%` prefix followed by the name of the section and are optional.
 
 ```singularity
 Bootstrap: docker
@@ -424,18 +399,14 @@ From: ubuntu:20.04
     python -c 'print("Hello World!")'
 ```
 
-The first two lines specify where to bootstrap our image from. ([In
-computing](https://stackoverflow.com/a/1254561), a bootstrap loader is the
-first piece of code that runs when a machine starts, and is responsible for
-loading the rest of the operating system.)
+The first two lines specify where to bootstrap our image from. ([In computing](https://stackoverflow.com/a/1254561), a bootstrap loader is the first piece of code that runs when a machine starts, and is responsible for loading the rest of the operating system.)
 
 The `%post` section runs code within the context of the new container image.
 
 The `%runscript` section defines what runs with `singularity run`.
 
 See
-[Sections](https://docs.sylabs.io/guides/latest/user-guide/definition_files.html#sections)
-for more information on other sections.
+[Sections](https://docs.sylabs.io/guides/latest/user-guide/definition_files.html#sections) for more information on other sections.
 
 ```singularity
 Bootstrap: docker
@@ -455,15 +426,9 @@ curl -sSL https://github.com/COMBINE-lab/salmon/releases/download/v1.0.0/salmon-
 && mv /salmon-*/lib/* /usr/lib/
 ```
 
-Create the image, which requires `sudo` permissions. If you do not have `sudo`
-access build the image on a machine where you have admin privileges. (I have
-used the full path for singularity because `/usr/local/bin` is not in the
-`PATH` for `root`.)
+Create the image, which requires `sudo` permissions. If you do not have `sudo` access build the image on a machine where you have admin privileges. (I have used the full path for singularity because `/usr/local/bin` is not in the `PATH` for `root`.)
 
-(The
-[fakeroot](https://docs.sylabs.io/guides/latest/user-guide/fakeroot.html#build)
-option (not used below) lets an unprivileged user build an image from a
-definition file with few restrictions.)
+(The [fakeroot](https://docs.sylabs.io/guides/latest/user-guide/fakeroot.html#build) option (not used below) lets an unprivileged user build an image from a definition file with few restrictions.)
 
 ```console
 singularity build my-image.sif Singularity
@@ -510,8 +475,7 @@ cat /etc/os-release
 # BUG_REPORT_URL="https://bugs.debian.org/"
 ```
 
-Singularity automatically mounts your home and current working directory. In
-addition, files created inside the container are owned by you (unlike Docker).
+Singularity automatically mounts your home and current working directory. In addition, files created inside the container are owned by you (unlike Docker).
 
 ```console
 ls /home
@@ -781,13 +745,7 @@ org.label-schema.usage.singularity.version: 4.1.3
 
 ## BioContainers
 
-Run (https://biocontainers-edu.readthedocs.io/en/latest/what_is_biocontainers.html)
-containers. To look for a container, go to the [BioContainers organisation
-page](https://quay.io/organization/biocontainers) and wait for all the
-containers to load on the page; this takes several minutes because there's a
-lot of containers, so go get a tasty beverage while the page loads. (There are
-11,073 containers as of 2023/06/06.) Once it finishes loading, you can quickly
-search for a tool of interest.
+Run (https://biocontainers-edu.readthedocs.io/en/latest/what_is_biocontainers.html) containers. To look for a container, go to the [BioContainers organisation page](https://quay.io/organization/biocontainers) and wait for all the containers to load on the page; this takes several minutes because there's a lot of containers, so go get a tasty beverage while the page loads. (There are 11,073 containers as of 2023/06/06.) Once it finishes loading, you can quickly search for a tool of interest.
 
 SAMtools.
 
