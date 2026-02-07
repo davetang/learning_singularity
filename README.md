@@ -20,11 +20,20 @@
     - [Building a sandbox from a definition file](#building-a-sandbox-from-a-definition-file)
     - [Cleaning up](#cleaning-up)
     - [Sandbox vs definition file workflow](#sandbox-vs-definition-file-workflow)
+  - [Overlay filesystems](#overlay-filesystems)
   - [Definition file](#definition-file)
+    - [%test section](#test-section)
+    - [%startscript section](#startscript-section)
+    - [Multi-stage builds](#multi-stage-builds)
+  - [Fakeroot](#fakeroot)
+  - [Environment variable precedence](#environment-variable-precedence)
   - [BioContainers](#biocontainers)
   - [Running services](#running-services)
+  - [GPU support](#gpu-support)
   - [Isolation](#isolation)
   - [Limiting Container Resources](#limiting-container-resources)
+  - [Signing and verifying images](#signing-and-verifying-images)
+  - [Cache management](#cache-management)
   - [Troubleshooting](#troubleshooting)
   - [Tips](#tips)
 
@@ -652,6 +661,38 @@ rm -rf my_sandbox/
 
 A common workflow is to experiment in a sandbox, then translate your successful commands into a definition file for reproducibility.
 
+## Overlay filesystems
+
+SIF images are read-only by default. [Overlay filesystems](https://docs.sylabs.io/guides/latest/user-guide/persistent_overlays.html) let you add a persistent writable layer on top of a read-only SIF image without converting it to a sandbox. This is useful when you need to install additional software or write data inside the container while keeping the base image intact.
+
+Create a writable overlay image (ext3 format):
+
+```console
+# Create a 500MB overlay image
+singularity overlay create --size 500 my_overlay.img
+```
+
+Use the overlay with a SIF image:
+
+```console
+singularity shell --overlay my_overlay.img my_image.sif
+```
+
+Changes written inside the container are stored in `my_overlay.img` and persist across runs. The base SIF remains unmodified, so you can use different overlays with the same image.
+
+You can also embed a writable overlay directly into a SIF file:
+
+```console
+singularity overlay create --size 500 my_image.sif
+singularity shell --writable my_image.sif
+```
+
+Overlays are helpful when:
+
+* You need to install a few extra packages on top of a shared base image
+* You want writable storage without the overhead of a full sandbox
+* Multiple users share the same base image but need different customisations
+
 ## Definition file
 
 `sections.def` shows some sections inside a Singularity Definition File.
@@ -743,6 +784,126 @@ org.label-schema.usage.singularity.runscript.help: /.singularity.d/runscript.hel
 org.label-schema.usage.singularity.version: 4.1.3
 ```
 
+### %test section
+
+The `%test` section runs at the end of the build process to validate the container. An important gotcha: **only the exit code of the last command determines success or failure**. Earlier commands can fail silently.
+
+```singularity
+%test
+    # BAD: if false fails, but grep succeeds, the test passes
+    false
+    grep -q "something" /some/file
+
+    # GOOD: use set -e to fail on any error
+    set -e
+    false
+    grep -q "something" /some/file
+```
+
+Always use `set -e` at the top of your `%test` section to catch failures from any command, not just the last one. See the [demo/](demo/) directory for examples.
+
+For R package installation, `install.packages()` failures only produce warnings, not errors. Wrap in `tryCatch` to convert them:
+
+```r
+tryCatch(
+    message = function(x) stop("Warning detected"),
+    install.packages("nonexistent_package")
+)
+```
+
+### %startscript section
+
+The `%startscript` section defines what runs when a container is started as a background [instance](https://docs.sylabs.io/guides/latest/user-guide/running_services.html) (service/daemon), as opposed to `%runscript` which runs in the foreground.
+
+```singularity
+%startscript
+    echo "Starting my service..."
+    exec my_service --daemon
+```
+
+This is used with `singularity instance start` (see [Running services](#running-services)). The [ollama/](ollama/) directory has a working example of running an LLM service using `%startscript`.
+
+### Multi-stage builds
+
+[Multi-stage builds](https://docs.sylabs.io/guides/latest/user-guide/definition_files.html#multi-stage-builds) let you use one container to compile software and then copy only the results into a smaller final image. This reduces image size by excluding build-time dependencies (compilers, headers, etc.) from the production image.
+
+```singularity
+Bootstrap: docker
+From: ubuntu:22.04
+Stage: build
+
+%post
+    apt-get update && apt-get install -y build-essential
+    gcc -o /usr/local/bin/myapp myapp.c
+
+Bootstrap: docker
+From: debian:bookworm-slim
+Stage: final
+
+%files from build
+    /usr/local/bin/myapp /usr/local/bin/myapp
+
+%runscript
+    exec /usr/local/bin/myapp "$@"
+```
+
+The `Stage:` header names each stage. The `%files from build` directive copies files from the `build` stage into the `final` stage. Only the last stage becomes the output image.
+
+## Fakeroot
+
+The [fakeroot](https://docs.sylabs.io/guides/latest/user-guide/fakeroot.html) feature lets unprivileged users build containers from definition files without `sudo`. It uses Linux user namespaces to map your user ID to root (UID 0) inside the container, so commands like `apt-get install` work during `%post`.
+
+```console
+singularity build --fakeroot my_image.sif my_definition.def
+```
+
+The system administrator must configure fakeroot for each user:
+
+```console
+# Admin grants fakeroot permission to a user
+sudo singularity config fakeroot --add <username>
+```
+
+You can verify fakeroot is available:
+
+```console
+singularity buildcfg | grep FAKEROOT
+```
+
+Fakeroot is the recommended way to build containers on shared HPC systems where users do not have root access. If fakeroot is not available and you do not have `sudo`, you can use the `--remote` flag to build on the [Sylabs Cloud](https://cloud.sylabs.io/) instead:
+
+```console
+singularity build --remote my_image.sif my_definition.def
+```
+
+## Environment variable precedence
+
+Singularity sets environment variables from multiple sources, and the [order of precedence](https://docs.sylabs.io/guides/latest/user-guide/environment_and_metadata.html) (highest to lowest) is:
+
+1. `--env` and `--env-file` flags on the command line
+2. Host environment variables (inherited by default)
+3. `%environment` section in the definition file
+
+This means host environment variables can override values set in `%environment`, which is a common source of unexpected behavior. Use `--cleanenv` to prevent host variables from leaking into the container:
+
+```console
+# Without --cleanenv, host PATH is inherited
+singularity exec my_image.sif echo $PATH
+
+# With --cleanenv, only container-defined variables are set
+singularity exec --cleanenv my_image.sif echo $PATH
+```
+
+You can also pass an env file for multiple variables:
+
+```console
+cat my_env.txt
+# KEY1=value1
+# KEY2=value2
+
+singularity exec --env-file my_env.txt my_image.sif env
+```
+
 ## BioContainers
 
 Run (https://biocontainers-edu.readthedocs.io/en/latest/what_is_biocontainers.html) containers. To look for a container, go to the [BioContainers organisation page](https://quay.io/organization/biocontainers) and wait for all the containers to load on the page; this takes several minutes because there's a lot of containers, so go get a tasty beverage while the page loads. (There are 11,073 containers as of 2023/06/06.) Once it finishes loading, you can quickly search for a tool of interest.
@@ -802,9 +963,90 @@ From [Instances - Running Services](https://docs.sylabs.io/guides/4.2/user-guide
 
 > SingularityCE is most commonly used to run containers interactively, or in a batch job, where the container runs in the foreground, performs some work, and then exits. There are different ways in which you can run SingularityCE containers in the foreground. If you use run, exec and shell to interact with processes in the container, then you are running SingularityCE containers in the foreground.
 >
-> SingularityCE, also allows you to run containers in a “detached” or “daemon” mode where the container runs a service. A “service” is essentially a process running in the background that multiple different clients can use. For example, a web server or a database.
+> SingularityCE, also allows you to run containers in a "detached" or "daemon" mode where the container runs a service. A "service" is essentially a process running in the background that multiple different clients can use. For example, a web server or a database.
 >
 > A SingularityCE container running a service in the background is called an instance, to distinguish it from the default mode which runs containers in the foreground.
+
+Start a named instance in the background. This executes the `%startscript` defined in the image.
+
+```console
+singularity instance start my_image.sif my_instance
+```
+
+List running instances.
+
+```console
+singularity instance list
+# INSTANCE NAME    PID      IP    IMAGE
+# my_instance      12345          /path/to/my_image.sif
+```
+
+Execute a command inside a running instance.
+
+```console
+singularity exec instance://my_instance some_command
+```
+
+Open a shell inside a running instance.
+
+```console
+singularity shell instance://my_instance
+```
+
+Stop a named instance.
+
+```console
+singularity instance stop my_instance
+```
+
+Stop all running instances.
+
+```console
+singularity instance stop --all
+```
+
+Instances are particularly useful for running web servers, databases, or other long-running services. See the [ollama/](ollama/) directory for a complete example of running an LLM service, and [rstudio/](rstudio/) for running RStudio Server.
+
+## GPU support
+
+Singularity can pass through host GPUs to containers, which is essential for machine learning and GPU-accelerated workloads.
+
+For **NVIDIA GPUs**, use the `--nv` flag:
+
+```console
+singularity exec --nv my_image.sif nvidia-smi
+```
+
+The `--nv` flag automatically:
+
+* Binds the host NVIDIA driver libraries into the container
+* Sets up the `NVIDIA_VISIBLE_DEVICES` and other required environment variables
+* Makes GPU devices available inside the container
+
+For **AMD GPUs**, use the `--rocm` flag:
+
+```console
+singularity exec --rocm my_image.sif rocm-smi
+```
+
+A typical GPU container uses a CUDA base image from Docker Hub:
+
+```singularity
+Bootstrap: docker
+From: nvidia/cuda:12.2.0-runtime-ubuntu22.04
+
+%post
+    apt-get update && apt-get install -y python3 python3-pip
+    pip3 install torch
+```
+
+```console
+singularity build --fakeroot torch.sif torch.def
+singularity exec --nv torch.sif python3 -c "import torch; print(torch.cuda.is_available())"
+# True
+```
+
+No special driver installation is needed inside the container; the host drivers are shared via `--nv`. The container only needs the CUDA runtime/toolkit matching the host driver version.
 
 ## Isolation
 
@@ -865,6 +1107,86 @@ singularity exec --net --network none ollama.sif curl -I 23.196.3.208
 ```
 curl: (7) Failed to connect to 23.196.3.208 port 80 after 0 ms: Couldn't connect to server
 ```
+
+## Signing and verifying images
+
+Singularity supports [signing and verifying](https://docs.sylabs.io/guides/latest/user-guide/signNverify.html) container images using PGP keys. This ensures that an image has not been tampered with and comes from a trusted source.
+
+Generate a PGP key (one-time setup):
+
+```console
+singularity key newpair
+```
+
+Sign an image:
+
+```console
+singularity sign my_image.sif
+```
+
+Verify a signed image:
+
+```console
+singularity verify my_image.sif
+```
+
+Manage keys:
+
+```console
+# List local keys
+singularity key list
+
+# Push your public key to the keyserver so others can verify your images
+singularity key push <fingerprint>
+
+# Pull someone else's public key
+singularity key pull <fingerprint>
+```
+
+Signing is especially important when sharing images across a team or downloading images from remote sources. On systems with strict security policies, administrators can require that all images be signed before execution.
+
+## Cache management
+
+Singularity caches downloaded images and OCI blobs to avoid re-downloading. Over time, the cache can grow large.
+
+View the cache:
+
+```console
+singularity cache list
+```
+
+Show detailed cache contents:
+
+```console
+singularity cache list -v
+```
+
+Clean the entire cache:
+
+```console
+singularity cache clean
+```
+
+Clean only specific cache types:
+
+```console
+# Clean only OCI/Docker layer blobs
+singularity cache clean --type blob
+
+# Clean only SIF images from library
+singularity cache clean --type library
+
+# Dry run to see what would be removed
+singularity cache clean --dry-run
+```
+
+The default cache location is `~/.singularity/cache`. Override it with the `SINGULARITY_CACHEDIR` environment variable:
+
+```console
+export SINGULARITY_CACHEDIR=/scratch/$USER/singularity_cache
+```
+
+This is useful on HPC systems where home directories have limited quota but scratch space is plentiful.
 
 ## Troubleshooting
 
