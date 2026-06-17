@@ -1,51 +1,77 @@
 ## Table of Contents
 
-- [README](#readme)
-  - [Fork](#fork)
-  - [TL;DR](#tldr)
-  - [Installation](#installation)
+- [Singularity and Apptainer](#singularity-and-apptainer)
+- [1. Overview](#1-overview)
+  - [What is Singularity?](#what-is-singularity)
+  - [Why containers in HPC](#why-containers-in-hpc)
+  - [SingularityCE vs Apptainer](#singularityce-vs-apptainer)
+  - [Key concepts](#key-concepts)
+- [2. Installation](#2-installation)
+  - [SingularityCE](#singularityce)
     - [CentOS/RHEL 7](#centosrhel-7)
     - [Debian](#debian)
-    - [General steps](#general-steps)
-    - [Docker](#docker)
-    - [Apple Silicon](#apple-silicon)
+    - [Build from source](#build-from-source)
+    - [Verify the installation](#verify-the-installation)
   - [Apptainer](#apptainer)
-    - [Debian](#debian)
-  - [Getting started](#getting-started)
-    - [Images](#images)
+  - [Inside Docker](#inside-docker)
+  - [macOS (Apple Silicon)](#macos-apple-silicon)
+- [3. Quick start](#3-quick-start)
+- [4. Obtaining images](#4-obtaining-images)
+- [5. Building images](#5-building-images)
+  - [Two approaches](#two-approaches)
+  - [Definition files](#definition-files)
+    - [The %startscript section](#the-startscript-section)
+  - [Build privileges](#build-privileges)
+  - [A worked example](#a-worked-example)
+  - [The %test section](#the-test-section)
   - [Sandbox mode](#sandbox-mode)
-    - [Creating a sandbox](#creating-a-sandbox)
-    - [Working inside the sandbox](#working-inside-the-sandbox)
-    - [Converting a sandbox to a SIF image](#converting-a-sandbox-to-a-sif-image)
-    - [Building a sandbox from a definition file](#building-a-sandbox-from-a-definition-file)
-    - [Cleaning up](#cleaning-up)
-    - [Sandbox vs definition file workflow](#sandbox-vs-definition-file-workflow)
+  - [Multi-stage builds](#multi-stage-builds)
   - [Overlay filesystems](#overlay-filesystems)
-  - [Definition file](#definition-file)
-    - [%test section](#test-section)
-    - [%startscript section](#startscript-section)
-    - [Multi-stage builds](#multi-stage-builds)
-  - [Fakeroot](#fakeroot)
-  - [Environment variable precedence](#environment-variable-precedence)
-  - [BioContainers](#biocontainers)
-  - [Running services](#running-services)
-  - [GPU support](#gpu-support)
+- [6. Running containers](#6-running-containers)
+  - [Environment variables and precedence](#environment-variables-and-precedence)
   - [Isolation](#isolation)
-  - [Limiting Container Resources](#limiting-container-resources)
+  - [Resource limits](#resource-limits)
+  - [GPU support](#gpu-support)
+  - [Running services (instances)](#running-services-instances)
+- [7. Managing images](#7-managing-images)
+  - [Inspecting images](#inspecting-images)
   - [Signing and verifying images](#signing-and-verifying-images)
   - [Cache management](#cache-management)
-  - [Troubleshooting](#troubleshooting)
-  - [Tips](#tips)
+- [8. Use cases](#8-use-cases)
+  - [BioContainers](#biocontainers)
+  - [Example projects in this repo](#example-projects-in-this-repo)
+- [9. Troubleshooting](#9-troubleshooting)
+- [10. Tips and further reading](#10-tips-and-further-reading)
 
-# README
+# Singularity and Apptainer
 
 Learning about Singularity (the container platform and not the technological singularity).
 
-## Fork
+# 1. Overview
+
+This section gives the background needed to make sense of the rest of the notes: what Singularity is, why it exists alongside Docker in HPC, how it relates to Apptainer, and the handful of concepts that recur throughout.
+
+## What is Singularity?
+
+> [Apptainer](https://apptainer.org/docs/user/latest/introduction.html) is a container platform. It allows you to create and run containers that package up pieces of software in a way that is portable and reproducible. You can build a container using Apptainer on your laptop, and then run it on many of the largest HPC clusters in the world, local university or company clusters, a single server, in the cloud, or on a workstation down the hall. Your container is a single file, and you don’t have to worry about how to install all the software you need on each different operating system.
+
+Singularity (and its successor projects) is that container platform. The same description applies to SingularityCE; the two projects share a common origin and a near-identical command set.
+
+## Why containers in HPC
+
+Following the getting started guide from the [Nextflow tutorial](https://training.nextflow.io/basic_training/containers/#singularity).
+
+Singularity is a container runtime designed to work in high-performance computing data centers, where the usage of Docker is generally not allowed due to security reasons.
+
+Singularity implements a container execution model similar to Docker but it uses a completely different implementation design.
+
+A Singularity container image is archived as a plain file that can be stored in a shared file system and accessed by many computing nodes managed using a batch scheduler.
+
+## SingularityCE vs Apptainer
 
 Singularity forked into [Apptainer](https://apptainer.org/news/community-announcement-20211130/) and [SingularityCE](https://sylabs.io/singularity/). Most of my notes here were written before I knew about the fork and are based on using SingularityCE.
 
-The Hello World example works the same for `apptainer`.
+The commands are largely interchangeable. The Hello World example works the same for `apptainer`.
 
 ```console
 wget https://github.com/apptainer/apptainer/releases/download/v1.2.5/apptainer_1.2.5_amd64.deb
@@ -56,83 +82,24 @@ apptainer run hello-world.sif
 # RaawwWWWWWRRRR!! Avocado!
 ```
 
-## TL;DR
+Throughout these notes the `singularity` command is used, but you can usually substitute `apptainer` directly.
 
-[Hello World example](https://carpentries-incubator.github.io/singularity-introduction/01-singularity-gettingstarted/index.html).
+## Key concepts
 
-```console
-mkdir test
-cd test
-singularity pull hello-world.sif shub://vsoch/hello-world
-singularity run hello-world.sif
-# RaawwWWWWWRRRR!! Avocado!
-```
+A few ideas come up repeatedly:
 
-The image is hosted on [DataLad](https://datasets.datalad.org/?dir=/shub/vsoch/hello-world/latest/2021-04-19-3bac21df-104932c9/) because [Singularity Hub is  no longer maintained](https://singularityhub.github.io/singularityhub-docs/2021/going-read-only/).
-
-Check what an image will RUN by default.
-
-```console
-singularity inspect -r hello-world.sif
-
-# #!/bin/sh
-#
-# exec /bin/bash /rawr.sh
-```
-
-Execute a command.
-
-```console
-singularity exec hello-world.sif cat /rawr.sh
-
-# #!/bin/bash
-#
-# echo "RaawwWWWWWRRRR!! Avocado!"
-```
-
-`singularity` will automatically mount the current directory and files created
-inside the container will be owned by your host user.
-
-Import Docker image; image will be saved as `tidyverse_4.3.2.sif`.
-
-```console
-singularity pull docker://rocker/tidyverse:4.3.2
-```
-
-Build an image, where `minimal.sif` is the image name and `bookworm_slim.def` is the Definition File, which is like the Dockerfile for Docker.
-
-```console
-singularity build --fakeroot --force minimal.sif bookworm_slim.def
-```
-
-Run container.
-
-```console
-singularity exec tidyverse_4.3.2.sif R
-```
-
-Run a shell within a container.
-
-```console
-singularity shell tidyverse_4.3.2.sif
-
-echo $SHELL
-# /bin/bash
-```
-
-[Mount path](https://docs.sylabs.io/guides/3.7/user-guide/bind_paths_and_mounts.html) using `--bind`.
-
-```console
-singularity exec --bind ${HOME}/github/learning_singularity:/mnt my-image.sif ls -1 /mnt
-# LICENSE
-# my-image.sif
-# README.md
-# Singularity
-```
+* **SIF image** — a Singularity/Apptainer container is a single, read-only `.sif` file that you can copy around like any other file. This is what makes it convenient on shared filesystems and batch schedulers.
+* **Definition file** — a `.def` file describes how to build an image, much like a `Dockerfile`. See [Building images](#5-building-images).
+* **Build then run** — the usual workflow is to *build* an image (from a definition file, a sandbox, or by pulling an existing image) and then *run* it with `run`, `exec`, or `shell`.
+* **Host integration** — by default Singularity mounts your home and current working directory into the container, and files you create are owned by your host user (unlike Docker). [Isolation](#isolation) covers how to turn this off.
 
 [Documentation and examples](https://sylabs.io/docs/).
 
-## Installation
+# 2. Installation
+
+How to get Singularity or Apptainer onto your system. Pick the path that matches your platform: build SingularityCE from source on Linux, install Apptainer from a Debian package, run Singularity inside Docker, or set up a Linux VM on macOS.
+
+## SingularityCE
 
 [SingularityCE](https://github.com/sylabs/singularity) is the Community Edition of Singularity and is licensed under a [BSD 3-Clause](https://github.com/sylabs/singularity/blob/main/LICENSE.md). Installation is the same for different flavours of Linux except when installing dependencies since different distros use different package managers.
 
@@ -199,7 +166,9 @@ sudo apt-get install -y \
     zlib1g-dev
 ```
 
-### General steps
+### Build from source
+
+Once the dependencies above are installed, the build steps are the same across distributions.
 
 Download Go and add to `PATH`.
 
@@ -230,7 +199,7 @@ make -C builddir
 sudo make -C builddir install
 ```
 
-Check installation.
+### Verify the installation
 
 ```console
 which singularity
@@ -240,7 +209,27 @@ singularity --version
 # singularity-ce version 4.1.1
 ```
 
-### Docker
+## Apptainer
+
+If you prefer Apptainer, the easiest route on Debian is the pre-built package.
+
+> [Apptainer](https://apptainer.org/docs/user/latest/introduction.html) is a container platform. It allows you to create and run containers that package up pieces of software in a way that is portable and reproducible. You can build a container using Apptainer on your laptop, and then run it on many of the largest HPC clusters in the world, local university or company clusters, a single server, in the cloud, or on a workstation down the hall. Your container is a single file, and you don’t have to worry about how to install all the software you need on each different operating system.
+
+[Install](https://apptainer.org/docs/admin/main/installation.html#install-debian-packages) using pre-built Debian packages (only available on GitHub and only for the amd64 architecture).
+
+```console
+cd /tmp
+wget https://github.com/apptainer/apptainer/releases/download/v1.4.1/apptainer_1.4.1_amd64.deb
+sudo apt install -y ./apptainer_1.4.1_amd64.deb
+rm apptainer_1.4.1_amd64.deb
+
+apptainer version
+```
+```
+1.4.1
+```
+
+## Inside Docker
 
 It never occurred to me that you could use Singularity inside Docker!
 
@@ -258,7 +247,7 @@ docker run --privileged --rm -it --entrypoint /bin/bash -v $(pwd):$(pwd) -w $(pw
 singularity build test.sif Singularity
 ```
 
-### Apple Silicon
+## macOS (Apple Silicon)
 
 [Installing SingularityCE on macOS with Apple Silicon using UTM and Rocky Linux](https://sylabs.io/2023/03/installing-singularityce-on-macos-with-apple-silicon-using-utm-rocky/).
 
@@ -356,155 +345,85 @@ Success!
 limactl shell singularity-ce singularity shell /tmp/lima/test.sif
 ```
 
-## Apptainer
+# 3. Quick start
 
-> [Apptainer](https://apptainer.org/docs/user/latest/introduction.html) is a container platform. It allows you to create and run containers that package up pieces of software in a way that is portable and reproducible. You can build a container using Apptainer on your laptop, and then run it on many of the largest HPC clusters in the world, local university or company clusters, a single server, in the cloud, or on a workstation down the hall. Your container is a single file, and you don’t have to worry about how to install all the software you need on each different operating system.
+If you just want to see something work, this is the shortest path: pull an image, look at what it does, and run it. The later sections expand on each step.
 
-### Debian
-
-[Install](https://apptainer.org/docs/admin/main/installation.html#install-debian-packages) using pre-built Debian packages (only available on GitHub and only for the amd64 architecture).
+[Hello World example](https://carpentries-incubator.github.io/singularity-introduction/01-singularity-gettingstarted/index.html).
 
 ```console
-cd /tmp
-wget https://github.com/apptainer/apptainer/releases/download/v1.4.1/apptainer_1.4.1_amd64.deb
-sudo apt install -y ./apptainer_1.4.1_amd64.deb
-rm apptainer_1.4.1_amd64.deb
-
-apptainer version
-```
-```
-1.4.1
+mkdir test
+cd test
+singularity pull hello-world.sif shub://vsoch/hello-world
+singularity run hello-world.sif
+# RaawwWWWWWRRRR!! Avocado!
 ```
 
-## Getting started
+The image is hosted on [DataLad](https://datasets.datalad.org/?dir=/shub/vsoch/hello-world/latest/2021-04-19-3bac21df-104932c9/) because [Singularity Hub is  no longer maintained](https://singularityhub.github.io/singularityhub-docs/2021/going-read-only/).
 
-Following the getting started guide from the [Nextflow tutorial](https://training.nextflow.io/basic_training/containers/#singularity).
-
-Singularity is a container runtime designed to work in high-performance computing data centers, where the usage of Docker is generally not allowed due to security reasons.
-
-Singularity implements a container execution model similar to Docker but it uses a completely different implementation design.
-
-A Singularity container image is archived as a plain file that can be stored in a shared file system and accessed by many computing nodes managed using a batch scheduler.
-
-### Images
-
-There are two ways to building Singularity images:
-
-1. Building within a sandbox: build a container interactively within a sandbox environment
-2. Building using a Singularity Definition File, which should be preferred since this is more reproducible.
-
-The [Singularity Definition File](https://docs.sylabs.io/guides/latest/user-guide/definition_files.html) is similar to the `Dockerfile` for Docker but uses a different syntax. See [Singularity Definition file versus Dockerfile](https://docs.sylabs.io/guides/3.7/user-guide/singularity_and_docker.html#singularity-definition-file-vs-dockerfile).
-
-Sections (a.k.a. scriptlets or blobs) in the definition file are specified using a `%` prefix followed by the name of the section and are optional.
-
-```singularity
-Bootstrap: docker
-From: ubuntu:20.04
-
-%post
-    apt-get -y update && apt-get install -y python
-
-%runscript
-    python -c 'print("Hello World!")'
-```
-
-The first two lines specify where to bootstrap our image from. ([In computing](https://stackoverflow.com/a/1254561), a bootstrap loader is the first piece of code that runs when a machine starts, and is responsible for loading the rest of the operating system.)
-
-The `%post` section runs code within the context of the new container image.
-
-The `%runscript` section defines what runs with `singularity run`.
-
-See
-[Sections](https://docs.sylabs.io/guides/latest/user-guide/definition_files.html#sections) for more information on other sections.
-
-```singularity
-Bootstrap: docker
-From: debian:bullseye-slim
-
-%environment
-export PATH=$PATH:/usr/games/
-
-%labels
-AUTHOR <your name>
-
-%post
-
-apt-get update && apt-get install -y locales-all curl cowsay
-curl -sSL https://github.com/COMBINE-lab/salmon/releases/download/v1.0.0/salmon-1.0.0_linux_x86_64.tar.gz | tar xz \
-&& mv /salmon-*/bin/* /usr/bin/ \
-&& mv /salmon-*/lib/* /usr/lib/
-```
-
-Create the image, which requires `sudo` permissions. If you do not have `sudo` access build the image on a machine where you have admin privileges. (I have used the full path for singularity because `/usr/local/bin` is not in the `PATH` for `root`.)
-
-(The [fakeroot](https://docs.sylabs.io/guides/latest/user-guide/fakeroot.html#build) option (not used below) lets an unprivileged user build an image from a definition file with few restrictions.)
+Check what an image will RUN by default.
 
 ```console
-singularity build my-image.sif Singularity
-# FATAL:   --remote, --fakeroot, or the proot command are required to build this source as a non-root user
+singularity inspect -r hello-world.sif
 
-sudo /usr/local/bin/singularity build my-image.sif Singularity
-# snipped
-# INFO:    Adding labels
-# INFO:    Adding environment to container
-# INFO:    Creating SIF file...
-# INFO:    Build complete: my-image.sif
-
-ls -lah my-image.sif
-# -rwxr-xr-x. 1 dtang dtang 144M May  9 14:04 my-image.sif
+# #!/bin/sh
+#
+# exec /bin/bash /rawr.sh
 ```
 
-Run `cowsay`.
+Execute a command.
 
 ```console
-singularity exec my-image.sif cowsay 'Hello Singularity'
-#  ___________________
-# < Hello Singularity >
-#  -------------------
-#         \   ^__^
-#          \  (oo)\_______
-#             (__)\       )\/\
-#                 ||----w |
-#                 ||     ||
+singularity exec hello-world.sif cat /rawr.sh
+
+# #!/bin/bash
+#
+# echo "RaawwWWWWWRRRR!! Avocado!"
 ```
 
-Use `shell` for interactive mode.
+`singularity` will automatically mount the current directory and files created
+inside the container will be owned by your host user.
+
+Import Docker image; image will be saved as `tidyverse_4.3.2.sif`.
 
 ```console
-singularity shell my-image.sif
-cat /etc/os-release
-# PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
-# NAME="Debian GNU/Linux"
-# VERSION_ID="11"
-# VERSION="11 (bullseye)"
-# VERSION_CODENAME=bullseye
-# ID=debian
-# HOME_URL="https://www.debian.org/"
-# SUPPORT_URL="https://www.debian.org/support"
-# BUG_REPORT_URL="https://bugs.debian.org/"
+singularity pull docker://rocker/tidyverse:4.3.2
 ```
 
-Singularity automatically mounts your home and current working directory. In addition, files created inside the container are owned by you (unlike Docker).
+Build an image, where `minimal.sif` is the image name and `bookworm_slim.def` is the Definition File, which is like the Dockerfile for Docker.
 
 ```console
-ls /home
-# dtang
-
-ls
-# LICENSE  my-image.sif  README.md  Singularity
-
-touch test.txt
-exit
+singularity build --fakeroot --force minimal.sif bookworm_slim.def
 ```
 
-List `test.txt`.
+Run container.
 
 ```console
-ls -al test.txt
-# -rw-rw-r--. 1 dtang dtang 0 May  9 14:11 test.txt
-
-rm test.txt
+singularity exec tidyverse_4.3.2.sif R
 ```
+
+Run a shell within a container.
+
+```console
+singularity shell tidyverse_4.3.2.sif
+
+echo $SHELL
+# /bin/bash
+```
+
+[Mount path](https://docs.sylabs.io/guides/3.7/user-guide/bind_paths_and_mounts.html) using `--bind`.
+
+```console
+singularity exec --bind ${HOME}/github/learning_singularity:/mnt my-image.sif ls -1 /mnt
+# LICENSE
+# my-image.sif
+# README.md
+# Singularity
+```
+
+# 4. Obtaining images
+
+Before building your own image you can pull a ready-made one. Images come from container registries (Docker Hub, Quay.io), the Singularity/Apptainer library (`library://`), or the legacy Singularity Hub (`shub://`).
 
 Import a Docker image.
 
@@ -543,157 +462,44 @@ cat /etc/os-release
 # LOGO=ubuntu-logo
 ```
 
-## Sandbox mode
+For a large catalogue of ready-made bioinformatics images, see [BioContainers](#biocontainers).
 
-A sandbox is a writable directory structure that represents a container. Unlike SIF files which are read-only, sandboxes allow you to interactively modify the container's filesystem. This is useful for:
+# 5. Building images
 
-* Debugging failed builds by testing commands interactively
-* Experimenting with package installations before writing a definition file
-* Developing containers incrementally when you're unsure of all dependencies
+When a ready-made image is not enough, you build your own. This section covers the two building approaches, the anatomy of a definition file, the privileges a build needs, and the more advanced building features (sandboxes, multi-stage builds, and overlays).
 
-### Creating a sandbox
+## Two approaches
 
-Use `--sandbox` to create a writable directory instead of a SIF file.
+There are two ways to building Singularity images:
 
-```console
-singularity build --sandbox my_sandbox/ docker://debian:bookworm-slim
-```
-```
-INFO:    Starting build...
-INFO:    Fetching OCI image...
-26.9MiB / 26.9MiB [===========================================================================================================================================================================] 100 % 11.6 MiB/s 0s
-INFO:    Extracting OCI image...
-INFO:    Inserting Singularity configuration...
-INFO:    Creating sandbox directory...
-INFO:    Build complete: my_sandbox/
-```
+1. Building within a sandbox: build a container interactively within a sandbox environment
+2. Building using a Singularity Definition File, which should be preferred since this is more reproducible.
 
-This creates a directory `my_sandbox/` containing the full container filesystem.
+## Definition files
 
-```console
-ls my_sandbox/
-```
-```
-bin
-boot
-dev
-environment
-etc
-home
-lib
-lib64
-media
-mnt
-opt
-proc
-root
-run
-sbin
-singularity
-srv
-sys
-tmp
-usr
-var
+The [Singularity Definition File](https://docs.sylabs.io/guides/latest/user-guide/definition_files.html) is similar to the `Dockerfile` for Docker but uses a different syntax. See [Singularity Definition file versus Dockerfile](https://docs.sylabs.io/guides/3.7/user-guide/singularity_and_docker.html#singularity-definition-file-vs-dockerfile).
+
+Sections (a.k.a. scriptlets or blobs) in the definition file are specified using a `%` prefix followed by the name of the section and are optional.
+
+```singularity
+Bootstrap: docker
+From: ubuntu:20.04
+
+%post
+    apt-get -y update && apt-get install -y python
+
+%runscript
+    python -c 'print("Hello World!")'
 ```
 
-### Working inside the sandbox
+The first two lines specify where to bootstrap our image from. ([In computing](https://stackoverflow.com/a/1254561), a bootstrap loader is the first piece of code that runs when a machine starts, and is responsible for loading the rest of the operating system.)
 
-Use `--writable` to enter the sandbox with write permissions.
+The `%post` section runs code within the context of the new container image.
 
-```console
-singularity shell --fakeroot --writable my_sandbox/
-```
+The `%runscript` section defines what runs with `singularity run`.
 
-Now you can install packages and make changes that persist.
-
-```console
-Singularity> apt update && apt install -y cowsay
-Singularity> /usr/games/cowsay "Tada!"
-```
-```
-________
-< Tada! >
- -------
-        \   ^__^
-         \  (oo)\_______
-            (__)\       )\/\
-                ||----w |
-                ||     ||
-```
-
-The changes persist in the sandbox directory. You can re-enter and continue where you left off.
-
-### Converting a sandbox to a SIF image
-
-Once you're satisfied with your sandbox, convert it to a production SIF image.
-
-```console
-singularity build --fakeroot my_image.sif my_sandbox/
-```
-
-### Building a sandbox from a definition file
-
-You can also build a sandbox from a definition file, which is helpful for debugging failing builds.
-
-```console
-singularity build --fakeroot --sandbox my_sandbox/ my_definition.def
-```
-
-If the build fails partway through, the sandbox will contain the state at the point of failure, allowing you to enter it and debug.
-
-### Cleaning up
-
-Sandboxes can take up significant disk space since they contain the full extracted filesystem. Remove them when no longer needed.
-
-```console
-rm -rf my_sandbox/
-```
-
-### Sandbox vs definition file workflow
-
-| Sandbox                      | Definition File             |
-|------------------------------|-----------------------------|
-| Interactive, trial-and-error | Scripted, reproducible      |
-| Good for exploration         | Good for production         |
-| Changes are manual           | Changes are documented      |
-| Hard to reproduce exactly    | Easy to rebuild identically |
-
-A common workflow is to experiment in a sandbox, then translate your successful commands into a definition file for reproducibility.
-
-## Overlay filesystems
-
-SIF images are read-only by default. [Overlay filesystems](https://docs.sylabs.io/guides/latest/user-guide/persistent_overlays.html) let you add a persistent writable layer on top of a read-only SIF image without converting it to a sandbox. This is useful when you need to install additional software or write data inside the container while keeping the base image intact.
-
-Create a writable overlay image (ext3 format):
-
-```console
-# Create a 500MB overlay image
-singularity overlay create --size 500 my_overlay.img
-```
-
-Use the overlay with a SIF image:
-
-```console
-singularity shell --overlay my_overlay.img my_image.sif
-```
-
-Changes written inside the container are stored in `my_overlay.img` and persist across runs. The base SIF remains unmodified, so you can use different overlays with the same image.
-
-You can also embed a writable overlay directly into a SIF file:
-
-```console
-singularity overlay create --size 500 my_image.sif
-singularity shell --writable my_image.sif
-```
-
-Overlays are helpful when:
-
-* You need to install a few extra packages on top of a shared base image
-* You want writable storage without the overhead of a full sandbox
-* Multiple users share the same base image but need different customisations
-
-## Definition file
+See
+[Sections](https://docs.sylabs.io/guides/latest/user-guide/definition_files.html#sections) for more information on other sections.
 
 `sections.def` shows some sections inside a Singularity Definition File.
 
@@ -784,34 +590,7 @@ org.label-schema.usage.singularity.runscript.help: /.singularity.d/runscript.hel
 org.label-schema.usage.singularity.version: 4.1.3
 ```
 
-### %test section
-
-The `%test` section runs at the end of the build process to validate the container. An important gotcha: **only the exit code of the last command determines success or failure**. Earlier commands can fail silently.
-
-```singularity
-%test
-    # BAD: if false fails, but grep succeeds, the test passes
-    false
-    grep -q "something" /some/file
-
-    # GOOD: use set -e to fail on any error
-    set -e
-    false
-    grep -q "something" /some/file
-```
-
-Always use `set -e` at the top of your `%test` section to catch failures from any command, not just the last one. See the [demo/](demo/) directory for examples.
-
-For R package installation, `install.packages()` failures only produce warnings, not errors. Wrap in `tryCatch` to convert them:
-
-```r
-tryCatch(
-    message = function(x) stop("Warning detected"),
-    install.packages("nonexistent_package")
-)
-```
-
-### %startscript section
+### The %startscript section
 
 The `%startscript` section defines what runs when a container is started as a background [instance](https://docs.sylabs.io/guides/latest/user-guide/running_services.html) (service/daemon), as opposed to `%runscript` which runs in the foreground.
 
@@ -821,35 +600,11 @@ The `%startscript` section defines what runs when a container is started as a ba
     exec my_service --daemon
 ```
 
-This is used with `singularity instance start` (see [Running services](#running-services)). The [ollama/](ollama/) directory has a working example of running an LLM service using `%startscript`.
+This is used with `singularity instance start` (see [Running services (instances)](#running-services-instances)). The [ollama/](ollama/) directory has a working example of running an LLM service using `%startscript`.
 
-### Multi-stage builds
+## Build privileges
 
-[Multi-stage builds](https://docs.sylabs.io/guides/latest/user-guide/definition_files.html#multi-stage-builds) let you use one container to compile software and then copy only the results into a smaller final image. This reduces image size by excluding build-time dependencies (compilers, headers, etc.) from the production image.
-
-```singularity
-Bootstrap: docker
-From: ubuntu:22.04
-Stage: build
-
-%post
-    apt-get update && apt-get install -y build-essential
-    gcc -o /usr/local/bin/myapp myapp.c
-
-Bootstrap: docker
-From: debian:bookworm-slim
-Stage: final
-
-%files from build
-    /usr/local/bin/myapp /usr/local/bin/myapp
-
-%runscript
-    exec /usr/local/bin/myapp "$@"
-```
-
-The `Stage:` header names each stage. The `%files from build` directive copies files from the `build` stage into the `final` stage. Only the last stage becomes the output image.
-
-## Fakeroot
+Building writes a new image, which historically required root. There are three ways to satisfy that requirement.
 
 The [fakeroot](https://docs.sylabs.io/guides/latest/user-guide/fakeroot.html) feature lets unprivileged users build containers from definition files without `sudo`. It uses Linux user namespaces to map your user ID to root (UID 0) inside the container, so commands like `apt-get install` work during `%post`.
 
@@ -876,7 +631,297 @@ Fakeroot is the recommended way to build containers on shared HPC systems where 
 singularity build --remote my_image.sif my_definition.def
 ```
 
-## Environment variable precedence
+## A worked example
+
+This ties the pieces together: a definition file that installs `cowsay` and `salmon`, building it, then running and shelling into the result.
+
+```singularity
+Bootstrap: docker
+From: debian:bullseye-slim
+
+%environment
+export PATH=$PATH:/usr/games/
+
+%labels
+AUTHOR <your name>
+
+%post
+
+apt-get update && apt-get install -y locales-all curl cowsay
+curl -sSL https://github.com/COMBINE-lab/salmon/releases/download/v1.0.0/salmon-1.0.0_linux_x86_64.tar.gz | tar xz \
+&& mv /salmon-*/bin/* /usr/bin/ \
+&& mv /salmon-*/lib/* /usr/lib/
+```
+
+Create the image, which requires `sudo` permissions. If you do not have `sudo` access build the image on a machine where you have admin privileges. (I have used the full path for singularity because `/usr/local/bin` is not in the `PATH` for `root`.)
+
+(The [fakeroot](https://docs.sylabs.io/guides/latest/user-guide/fakeroot.html#build) option (not used below) lets an unprivileged user build an image from a definition file with few restrictions; see [Build privileges](#build-privileges).)
+
+```console
+singularity build my-image.sif Singularity
+# FATAL:   --remote, --fakeroot, or the proot command are required to build this source as a non-root user
+
+sudo /usr/local/bin/singularity build my-image.sif Singularity
+# snipped
+# INFO:    Adding labels
+# INFO:    Adding environment to container
+# INFO:    Creating SIF file...
+# INFO:    Build complete: my-image.sif
+
+ls -lah my-image.sif
+# -rwxr-xr-x. 1 dtang dtang 144M May  9 14:04 my-image.sif
+```
+
+Run `cowsay`.
+
+```console
+singularity exec my-image.sif cowsay 'Hello Singularity'
+#  ___________________
+# < Hello Singularity >
+#  -------------------
+#         \   ^__^
+#          \  (oo)\_______
+#             (__)\       )\/\
+#                 ||----w |
+#                 ||     ||
+```
+
+Use `shell` for interactive mode.
+
+```console
+singularity shell my-image.sif
+cat /etc/os-release
+# PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"
+# NAME="Debian GNU/Linux"
+# VERSION_ID="11"
+# VERSION="11 (bullseye)"
+# VERSION_CODENAME=bullseye
+# ID=debian
+# HOME_URL="https://www.debian.org/"
+# SUPPORT_URL="https://www.debian.org/support"
+# BUG_REPORT_URL="https://bugs.debian.org/"
+```
+
+Singularity automatically mounts your home and current working directory. In addition, files created inside the container are owned by you (unlike Docker).
+
+```console
+ls /home
+# dtang
+
+ls
+# LICENSE  my-image.sif  README.md  Singularity
+
+touch test.txt
+exit
+```
+
+List `test.txt`.
+
+```console
+ls -al test.txt
+# -rw-rw-r--. 1 dtang dtang 0 May  9 14:11 test.txt
+
+rm test.txt
+```
+
+## The %test section
+
+The `%test` section runs at the end of the build process to validate the container. An important gotcha: **only the exit code of the last command determines success or failure**. Earlier commands can fail silently.
+
+```singularity
+%test
+    # BAD: if false fails, but grep succeeds, the test passes
+    false
+    grep -q "something" /some/file
+
+    # GOOD: use set -e to fail on any error
+    set -e
+    false
+    grep -q "something" /some/file
+```
+
+Always use `set -e` at the top of your `%test` section to catch failures from any command, not just the last one. See the [demo/](demo/) directory for examples.
+
+For R package installation, `install.packages()` failures only produce warnings, not errors. Wrap in `tryCatch` to convert them:
+
+```r
+tryCatch(
+    message = function(x) stop("Warning detected"),
+    install.packages("nonexistent_package")
+)
+```
+
+## Sandbox mode
+
+A sandbox is a writable directory structure that represents a container. Unlike SIF files which are read-only, sandboxes allow you to interactively modify the container's filesystem. This is useful for:
+
+* Debugging failed builds by testing commands interactively
+* Experimenting with package installations before writing a definition file
+* Developing containers incrementally when you're unsure of all dependencies
+
+**Creating a sandbox.** Use `--sandbox` to create a writable directory instead of a SIF file.
+
+```console
+singularity build --sandbox my_sandbox/ docker://debian:bookworm-slim
+```
+```
+INFO:    Starting build...
+INFO:    Fetching OCI image...
+26.9MiB / 26.9MiB [===========================================================================================================================================================================] 100 % 11.6 MiB/s 0s
+INFO:    Extracting OCI image...
+INFO:    Inserting Singularity configuration...
+INFO:    Creating sandbox directory...
+INFO:    Build complete: my_sandbox/
+```
+
+This creates a directory `my_sandbox/` containing the full container filesystem.
+
+```console
+ls my_sandbox/
+```
+```
+bin
+boot
+dev
+environment
+etc
+home
+lib
+lib64
+media
+mnt
+opt
+proc
+root
+run
+sbin
+singularity
+srv
+sys
+tmp
+usr
+var
+```
+
+**Working inside the sandbox.** Use `--writable` to enter the sandbox with write permissions.
+
+```console
+singularity shell --fakeroot --writable my_sandbox/
+```
+
+Now you can install packages and make changes that persist.
+
+```console
+Singularity> apt update && apt install -y cowsay
+Singularity> /usr/games/cowsay "Tada!"
+```
+```
+________
+< Tada! >
+ -------
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
+```
+
+The changes persist in the sandbox directory. You can re-enter and continue where you left off.
+
+**Converting a sandbox to a SIF image.** Once you're satisfied with your sandbox, convert it to a production SIF image.
+
+```console
+singularity build --fakeroot my_image.sif my_sandbox/
+```
+
+**Building a sandbox from a definition file.** You can also build a sandbox from a definition file, which is helpful for debugging failing builds.
+
+```console
+singularity build --fakeroot --sandbox my_sandbox/ my_definition.def
+```
+
+If the build fails partway through, the sandbox will contain the state at the point of failure, allowing you to enter it and debug.
+
+**Cleaning up.** Sandboxes can take up significant disk space since they contain the full extracted filesystem. Remove them when no longer needed.
+
+```console
+rm -rf my_sandbox/
+```
+
+**Sandbox vs definition file workflow.**
+
+| Sandbox                      | Definition File             |
+|------------------------------|-----------------------------|
+| Interactive, trial-and-error | Scripted, reproducible      |
+| Good for exploration         | Good for production         |
+| Changes are manual           | Changes are documented      |
+| Hard to reproduce exactly    | Easy to rebuild identically |
+
+A common workflow is to experiment in a sandbox, then translate your successful commands into a definition file for reproducibility.
+
+## Multi-stage builds
+
+[Multi-stage builds](https://docs.sylabs.io/guides/latest/user-guide/definition_files.html#multi-stage-builds) let you use one container to compile software and then copy only the results into a smaller final image. This reduces image size by excluding build-time dependencies (compilers, headers, etc.) from the production image.
+
+```singularity
+Bootstrap: docker
+From: ubuntu:22.04
+Stage: build
+
+%post
+    apt-get update && apt-get install -y build-essential
+    gcc -o /usr/local/bin/myapp myapp.c
+
+Bootstrap: docker
+From: debian:bookworm-slim
+Stage: final
+
+%files from build
+    /usr/local/bin/myapp /usr/local/bin/myapp
+
+%runscript
+    exec /usr/local/bin/myapp "$@"
+```
+
+The `Stage:` header names each stage. The `%files from build` directive copies files from the `build` stage into the `final` stage. Only the last stage becomes the output image.
+
+## Overlay filesystems
+
+SIF images are read-only by default. [Overlay filesystems](https://docs.sylabs.io/guides/latest/user-guide/persistent_overlays.html) let you add a persistent writable layer on top of a read-only SIF image without converting it to a sandbox. This is useful when you need to install additional software or write data inside the container while keeping the base image intact.
+
+Create a writable overlay image (ext3 format):
+
+```console
+# Create a 500MB overlay image
+singularity overlay create --size 500 my_overlay.img
+```
+
+Use the overlay with a SIF image:
+
+```console
+singularity shell --overlay my_overlay.img my_image.sif
+```
+
+Changes written inside the container are stored in `my_overlay.img` and persist across runs. The base SIF remains unmodified, so you can use different overlays with the same image.
+
+You can also embed a writable overlay directly into a SIF file:
+
+```console
+singularity overlay create --size 500 my_image.sif
+singularity shell --writable my_image.sif
+```
+
+Overlays are helpful when:
+
+* You need to install a few extra packages on top of a shared base image
+* You want writable storage without the overhead of a full sandbox
+* Multiple users share the same base image but need different customisations
+
+# 6. Running containers
+
+Once you have an image, `run`, `exec`, and `shell` (shown in [Quick start](#3-quick-start)) cover the basics. This section covers the flags that control *how* a container runs: its environment, its isolation from the host, its resource limits, GPU access, and running it as a background service.
+
+## Environment variables and precedence
 
 Singularity sets environment variables from multiple sources, and the [order of precedence](https://docs.sylabs.io/guides/latest/user-guide/environment_and_metadata.html) (highest to lowest) is:
 
@@ -904,108 +949,65 @@ cat my_env.txt
 singularity exec --env-file my_env.txt my_image.sif env
 ```
 
-## BioContainers
+## Isolation
 
-Run (https://biocontainers-edu.readthedocs.io/en/latest/what_is_biocontainers.html) containers. To look for a container, go to the [BioContainers organisation page](https://quay.io/organization/biocontainers) and wait for all the containers to load on the page; this takes several minutes because there's a lot of containers, so go get a tasty beverage while the page loads. (There are 11,073 containers as of 2023/06/06.) Once it finishes loading, you can quickly search for a tool of interest.
+One of the main goals of using containerisation software is for reproducibility. To ensure that the analysis environment is not polluted with a user's workspace here are some useful arguments.
 
-SAMtools.
-
-```console
-singularity pull docker://quay.io/biocontainers/samtools:1.17--hd87286a_1
-wget https://github.com/davetang/learning_bam_file/raw/main/eg/ERR188273_chrX.bam
-
-singularity exec samtools_1.17--hd87286a_1.sif samtools flagstat ERR188273_chrX.bam
-# 1176360 + 0 in total (QC-passed reads + QC-failed reads)
-# 1160084 + 0 primary
-# 16276 + 0 secondary
-# 0 + 0 supplementary
-# 0 + 0 duplicates
-# 0 + 0 primary duplicates
-# 1126961 + 0 mapped (95.80% : N/A)
-# 1110685 + 0 primary mapped (95.74% : N/A)
-# 1160084 + 0 paired in sequencing
-# 580042 + 0 read1
-# 580042 + 0 read2
-# 1060858 + 0 properly paired (91.45% : N/A)
-# 1065618 + 0 with itself and mate mapped
-# 45067 + 0 singletons (3.88% : N/A)
-# 0 + 0 with mate mapped to a different chr
-# 0 + 0 with mate mapped to a different chr (mapQ>=5)
-```
-
-BCFtools.
+* Use `--containall` to prevent the container from reading or writing from the host.
 
 ```console
-singularity pull docker://quay.io/biocontainers/bcftools:1.17--h3cc50cf_1
-wget https://github.com/davetang/learning_vcf_file/raw/main/eg/1001genomes_snp-short-indel_only_ACGTN_5000.vcf.gz
+# build image for demo
+singularity build --fakeroot --force minimal.sif bookworm_slim.def
 
-singularity exec bcftools_1.17--h3cc50cf_1.sif bcftools stats 1001genomes_snp-short-indel_only_ACGTN_5000.vcf.gz | tail -6
-# [W::vcf_parse] Contig '1' is not defined in the header. (Quick workaround: index the file with tabix.)
-# # DP, Depth distribution
-# # DP    [2]id   [3]bin  [4]number of genotypes  [5]fraction of genotypes (%)    [6]number of sites      [7]fraction of sites (%)
-# DP      0       98      0       0.000000        1       0.020036
-# DP      0       242     0       0.000000        1       0.020036
-# DP      0       457     0       0.000000        1       0.020036
-# DP      0       >500    0       0.000000        4988    99.939892
+# lists out files in my home directory
+singularity exec minimal.sif ls $HOME
+
+singularity exec --containall minimal.sif ls $HOME
+# no output
 ```
 
-MEME.
+* Use `--cleanenv` to prevent the container from inheriting most of the environment variables from the host.
 
 ```console
-singularity pull docker://quay.io/biocontainers/meme:5.5.2--py310pl5321h2bc4914_1
-singularity exec meme_5.5.2--py310pl5321h2bc4914_1.sif meme -version
-# 5.5.2
+# lists out my environment variables
+singularity exec minimal.sif ls $HOME
+
+singularity exec --cleanenv minimal.sif env
+# no host environment variables
 ```
 
-## Running services
+## Resource limits
 
-From [Instances - Running Services](https://docs.sylabs.io/guides/4.2/user-guide/running_services.html):
+There are three ways to apply [limits to a container](https://docs.sylabs.io/guides/main/user-guide/cgroups.html) that is run with SingularityCE:
 
-> SingularityCE is most commonly used to run containers interactively, or in a batch job, where the container runs in the foreground, performs some work, and then exits. There are different ways in which you can run SingularityCE containers in the foreground. If you use run, exec and shell to interact with processes in the container, then you are running SingularityCE containers in the foreground.
->
-> SingularityCE, also allows you to run containers in a "detached" or "daemon" mode where the container runs a service. A "service" is essentially a process running in the background that multiple different clients can use. For example, a web server or a database.
->
-> A SingularityCE container running a service in the background is called an instance, to distinguish it from the default mode which runs containers in the foreground.
+* Using the command line flags introduced in v3.10.
+    * Using `--cpus` sets the [number of CPUs](https://docs.sylabs.io/guides/main/user-guide/cgroups.html#cpu-limits), or fractional CPUs, that the container can use.
+    * Using `--memory` sets the [maximum amount of RAM](https://docs.sylabs.io/guides/main/user-guide/cgroups.html#memory-limits) that a container can use, in bytes. You can use suffixes such as M or G to specify megabytes or gigabytes.
+* Using the --apply-cgroups flag to apply a cgroups.toml file that defines the resource limits.
+* Using external tools such as systemd-run tool to apply limits, and then call singularity.
 
-Start a named instance in the background. This executes the `%startscript` defined in the image.
+Example of using command line flags.
 
 ```console
-singularity instance start my_image.sif my_instance
+singularity exec --memory 4G --cpus 2 image.sif command
 ```
 
-List running instances.
+[Restrict network access of a container](https://github.com/apptainer/singularity/issues/1634).
 
 ```console
-singularity instance list
-# INSTANCE NAME    PID      IP    IMAGE
-# my_instance      12345          /path/to/my_image.sif
+singularity exec --net --network none image.sif curl --output test.bed https://davetang.org/file/test.bed
 ```
-
-Execute a command inside a running instance.
-
+```
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: davetang.org
+```
 ```console
-singularity exec instance://my_instance some_command
+singularity exec --net --network none ollama.sif curl -I 23.196.3.208
 ```
-
-Open a shell inside a running instance.
-
-```console
-singularity shell instance://my_instance
 ```
-
-Stop a named instance.
-
-```console
-singularity instance stop my_instance
+curl: (7) Failed to connect to 23.196.3.208 port 80 after 0 ms: Couldn't connect to server
 ```
-
-Stop all running instances.
-
-```console
-singularity instance stop --all
-```
-
-Instances are particularly useful for running web servers, databases, or other long-running services. See the [ollama/](ollama/) directory for a complete example of running an LLM service, and [rstudio/](rstudio/) for running RStudio Server.
 
 ## GPU support
 
@@ -1048,65 +1050,71 @@ singularity exec --nv torch.sif python3 -c "import torch; print(torch.cuda.is_av
 
 No special driver installation is needed inside the container; the host drivers are shared via `--nv`. The container only needs the CUDA runtime/toolkit matching the host driver version.
 
-## Isolation
+## Running services (instances)
 
-One of the main goals of using containerisation software is for reproducibility. To ensure that the analysis environment is not polluted with a user's workspace here are some useful arguments.
+From [Instances - Running Services](https://docs.sylabs.io/guides/4.2/user-guide/running_services.html):
 
-* Use `--containall` to prevent the container from reading or writing from the host.
+> SingularityCE is most commonly used to run containers interactively, or in a batch job, where the container runs in the foreground, performs some work, and then exits. There are different ways in which you can run SingularityCE containers in the foreground. If you use run, exec and shell to interact with processes in the container, then you are running SingularityCE containers in the foreground.
+>
+> SingularityCE, also allows you to run containers in a "detached" or "daemon" mode where the container runs a service. A "service" is essentially a process running in the background that multiple different clients can use. For example, a web server or a database.
+>
+> A SingularityCE container running a service in the background is called an instance, to distinguish it from the default mode which runs containers in the foreground.
 
-```console
-# build image for demo
-singularity build --fakeroot --force minimal.sif bookworm_slim.def
-
-# lists out files in my home directory
-singularity exec minimal.sif ls $HOME
-
-singularity exec --containall minimal.sif ls $HOME
-# no output
-```
-
-* Use `--cleanenv` to prevent the container from inheriting most of the environment variables from the host.
+Start a named instance in the background. This executes the `%startscript` defined in the image (see [The %startscript section](#the-startscript-section)).
 
 ```console
-# lists out my environment variables
-singularity exec minimal.sif ls $HOME
-
-singularity exec --cleanenv minimal.sif env
-# no host environment variables
+singularity instance start my_image.sif my_instance
 ```
 
-## Limiting Container Resources
-
-There are three ways to apply [limits to a container](https://docs.sylabs.io/guides/main/user-guide/cgroups.html) that is run with SingularityCE:
-
-* Using the command line flags introduced in v3.10.
-    * Using `--cpus` sets the [number of CPUs](https://docs.sylabs.io/guides/main/user-guide/cgroups.html#cpu-limits), or fractional CPUs, that the container can use.
-    * Using `--memory` sets the [maximum amount of RAM](https://docs.sylabs.io/guides/main/user-guide/cgroups.html#memory-limits) that a container can use, in bytes. You can use suffixes such as M or G to specify megabytes or gigabytes.
-* Using the --apply-cgroups flag to apply a cgroups.toml file that defines the resource limits.
-* Using external tools such as systemd-run tool to apply limits, and then call singularity.
-
-Example of using command line flags.
+List running instances.
 
 ```console
-singularity exec --memory 4G --cpus 2 image.sif command
+singularity instance list
+# INSTANCE NAME    PID      IP    IMAGE
+# my_instance      12345          /path/to/my_image.sif
 ```
 
-[Restrict network access of a container](https://github.com/apptainer/singularity/issues/1634).
+Execute a command inside a running instance.
 
 ```console
-singularity exec --net --network none image.sif curl --output test.bed https://davetang.org/file/test.bed
+singularity exec instance://my_instance some_command
 ```
-```
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0curl: (6) Could not resolve host: davetang.org
-```
+
+Open a shell inside a running instance.
+
 ```console
-singularity exec --net --network none ollama.sif curl -I 23.196.3.208
+singularity shell instance://my_instance
 ```
+
+Stop a named instance.
+
+```console
+singularity instance stop my_instance
 ```
-curl: (7) Failed to connect to 23.196.3.208 port 80 after 0 ms: Couldn't connect to server
+
+Stop all running instances.
+
+```console
+singularity instance stop --all
 ```
+
+Instances are particularly useful for running web servers, databases, or other long-running services. See the [ollama/](ollama/) directory for a complete example of running an LLM service, and [rstudio/](rstudio/) for running RStudio Server.
+
+# 7. Managing images
+
+Beyond building and running, you will want to inspect images, verify they are trustworthy, and keep the local cache under control.
+
+## Inspecting images
+
+Singularity can report what an image contains and how it will behave. These commands are used throughout the notes above:
+
+```console
+singularity inspect <image.sif>      # view %labels metadata
+singularity inspect -r <image.sif>   # view the %runscript (what `run` will do)
+singularity run-help <image.sif>     # view the %help text
+```
+
+See [Definition files](#definition-files) for example output of `inspect` and `run-help`.
 
 ## Signing and verifying images
 
@@ -1188,7 +1196,71 @@ export SINGULARITY_CACHEDIR=/scratch/$USER/singularity_cache
 
 This is useful on HPC systems where home directories have limited quota but scratch space is plentiful.
 
-## Troubleshooting
+# 8. Use cases
+
+Concrete examples of putting the above together, including the worked projects kept in this repository.
+
+## BioContainers
+
+Run (https://biocontainers-edu.readthedocs.io/en/latest/what_is_biocontainers.html) containers. To look for a container, go to the [BioContainers organisation page](https://quay.io/organization/biocontainers) and wait for all the containers to load on the page; this takes several minutes because there's a lot of containers, so go get a tasty beverage while the page loads. (There are 11,073 containers as of 2023/06/06.) Once it finishes loading, you can quickly search for a tool of interest.
+
+SAMtools.
+
+```console
+singularity pull docker://quay.io/biocontainers/samtools:1.17--hd87286a_1
+wget https://github.com/davetang/learning_bam_file/raw/main/eg/ERR188273_chrX.bam
+
+singularity exec samtools_1.17--hd87286a_1.sif samtools flagstat ERR188273_chrX.bam
+# 1176360 + 0 in total (QC-passed reads + QC-failed reads)
+# 1160084 + 0 primary
+# 16276 + 0 secondary
+# 0 + 0 supplementary
+# 0 + 0 duplicates
+# 0 + 0 primary duplicates
+# 1126961 + 0 mapped (95.80% : N/A)
+# 1110685 + 0 primary mapped (95.74% : N/A)
+# 1160084 + 0 paired in sequencing
+# 580042 + 0 read1
+# 580042 + 0 read2
+# 1060858 + 0 properly paired (91.45% : N/A)
+# 1065618 + 0 with itself and mate mapped
+# 45067 + 0 singletons (3.88% : N/A)
+# 0 + 0 with mate mapped to a different chr
+# 0 + 0 with mate mapped to a different chr (mapQ>=5)
+```
+
+BCFtools.
+
+```console
+singularity pull docker://quay.io/biocontainers/bcftools:1.17--h3cc50cf_1
+wget https://github.com/davetang/learning_vcf_file/raw/main/eg/1001genomes_snp-short-indel_only_ACGTN_5000.vcf.gz
+
+singularity exec bcftools_1.17--h3cc50cf_1.sif bcftools stats 1001genomes_snp-short-indel_only_ACGTN_5000.vcf.gz | tail -6
+# [W::vcf_parse] Contig '1' is not defined in the header. (Quick workaround: index the file with tabix.)
+# # DP, Depth distribution
+# # DP    [2]id   [3]bin  [4]number of genotypes  [5]fraction of genotypes (%)    [6]number of sites      [7]fraction of sites (%)
+# DP      0       98      0       0.000000        1       0.020036
+# DP      0       242     0       0.000000        1       0.020036
+# DP      0       457     0       0.000000        1       0.020036
+# DP      0       >500    0       0.000000        4988    99.939892
+```
+
+MEME.
+
+```console
+singularity pull docker://quay.io/biocontainers/meme:5.5.2--py310pl5321h2bc4914_1
+singularity exec meme_5.5.2--py310pl5321h2bc4914_1.sif meme -version
+# 5.5.2
+```
+
+## Example projects in this repo
+
+* [rstudio/](rstudio/) — running RStudio Server in Singularity (uses Rocker images).
+* [ollama/](ollama/) — running an Ollama LLM as a background service via `%startscript` and instances.
+* [demo/](demo/) — build-testing examples, including `%test` section behaviour.
+* [runscript/](runscript/) — examples of `%runscript` usage.
+
+# 9. Troubleshooting
 
 If you get a "No space left on device error", check the size of `/tmp` directory. Singularity [will use](https://docs.sylabs.io/guides/2.5/user-guide/troubleshooting.html#no-space-left-on-device) the `TMPDIR` environment variable, so set it to a location with more space.
 
@@ -1203,7 +1275,7 @@ export SINGULARITY_TMPDIR=/dir/with/more/space
 export SINGULARITY_CACHEDIR=/dir/with/more/space
 ```
 
-## Tips
+# 10. Tips and further reading
 
 Create an environment variable using `--env`.
 
@@ -1213,3 +1285,5 @@ singularity exec --env BLAH=1984 minimal.sif bash -c 'env | grep BLAH'
 ```
 BLAH=1984
 ```
+
+[Documentation and examples](https://sylabs.io/docs/).
