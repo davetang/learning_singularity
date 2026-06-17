@@ -53,9 +53,17 @@ This section gives the background needed to make sense of the rest of the notes:
 
 ## What is Singularity?
 
-> [Apptainer](https://apptainer.org/docs/user/latest/introduction.html) is a container platform. It allows you to create and run containers that package up pieces of software in a way that is portable and reproducible. You can build a container using Apptainer on your laptop, and then run it on many of the largest HPC clusters in the world, local university or company clusters, a single server, in the cloud, or on a workstation down the hall. Your container is a single file, and you don’t have to worry about how to install all the software you need on each different operating system.
+Singularity is a **container platform**: a tool for packaging an application together with all of its dependencies (libraries, system tools, and configuration) into a single, portable unit that runs the same way wherever it is launched. This is what makes an analysis reproducible: the software environment travels with the container instead of having to be reinstalled and reconfigured on every machine.
 
-Singularity (and its successor projects) is that container platform. The same description applies to SingularityCE; the two projects share a common origin and a near-identical command set.
+A container is not a virtual machine. A virtual machine emulates a complete computer, running its own operating system kernel on top of the host. A container instead shares the host's kernel and isolates only the application and its filesystem, so it is far more lightweight because there is no second operating system to boot.
+
+What distinguishes Singularity from other container tools is its image format. A Singularity container is a **single file** in the Singularity Image Format (SIF), and that file is read-only by default. Because the whole container is one immutable file, you can copy it, version it, share it on a cluster filesystem, or archive it alongside your results.
+
+If you have used Docker the idea is the same, and Singularity can even run Docker and OCI images directly. OCI (the Open Container Initiative) is the open standard that defines the container image format Docker and the major registries use, so an "OCI image" is, in practice, just an image you would pull from somewhere like Docker Hub. Singularity is designed differently, though: there is no background daemon, and a container runs as you, the user who launched it, rather than as root (why that matters is covered in [Why containers in HPC](#why-containers-in-hpc)).
+
+"Singularity" here refers to the container platform, which has since split into two actively maintained successors, **SingularityCE** and **Apptainer**. They share a common origin and a near-identical command set, so these notes apply to both; the history is in [SingularityCE vs Apptainer](#singularityce-vs-apptainer). The official Apptainer documentation sums the platform up:
+
+> [Apptainer](https://apptainer.org/docs/user/latest/introduction.html) is a container platform. It allows you to create and run containers that package up pieces of software in a way that is portable and reproducible. You can build a container using Apptainer on your laptop, and then run it on many of the largest HPC clusters in the world, local university or company clusters, a single server, in the cloud, or on a workstation down the hall. Your container is a single file, and you don’t have to worry about how to install all the software you need on each different operating system.
 
 ## Why containers in HPC
 
