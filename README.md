@@ -94,14 +94,14 @@ Throughout these notes the `singularity` command is used, but you can usually su
 
 ## Key concepts
 
-A few ideas come up repeatedly:
+A few ideas come up repeatedly. The single-file SIF image format itself is described in [What is Singularity?](#what-is-singularity); the mechanics below are what the how-to sections assume.
 
-* **SIF image** — a Singularity/Apptainer container is a single, read-only `.sif` file that you can copy around like any other file. This is what makes it convenient on shared filesystems and batch schedulers.
-* **Definition file** — a `.def` file describes how to build an image, much like a `Dockerfile`. See [Building images](#5-building-images).
-* **Build then run** — the usual workflow is to *build* an image (from a definition file, a sandbox, or by pulling an existing image) and then *run* it with `run`, `exec`, or `shell`.
-* **Host integration** — by default Singularity mounts your home and current working directory into the container, and files you create are owned by your host user (unlike Docker). [Isolation](#isolation) covers how to turn this off.
-
-[Documentation and examples](https://sylabs.io/docs/).
+* **Build then run**: the core workflow is two steps. First you *build* an image (from a definition file, from a [sandbox](#sandbox-mode), or by [pulling](#4-obtaining-images) an existing one), then you *run* it. Almost everything in these notes is one of those two steps.
+* **Definition files and the base image**: an image is described by a definition (`.def`) file, much like a `Dockerfile`. Every build starts from a base image named in the `Bootstrap:` and `From:` header lines (for example `Bootstrap: docker` with `From: debian:bookworm-slim`), and the rest of the file layers your software on top. See [Building images](#5-building-images).
+* **run, exec, and shell**: there are three ways to execute a container. `singularity run` executes the image's built-in `%runscript` (its default action), `singularity exec` runs an arbitrary command that you supply, and `singularity shell` opens an interactive shell inside the container. See [Running containers](#6-running-containers).
+* **Building needs privileges, running does not**: creating an image writes a new root-owned filesystem, so a build runs with `--fakeroot` (or `sudo`), which uses Linux user namespaces to map you to root for the duration of the build only. Running an existing image with `run`, `exec`, or `shell` happens entirely as your normal user and needs no special privileges. See [Build privileges](#build-privileges).
+* **Bind mounts and host integration**: by default Singularity mounts your home directory, the current working directory, and `/tmp` into the container, and files you create are owned by your host user (unlike Docker). Use `--bind` to map additional host paths, or see [Isolation](#isolation) to turn this sharing off.
+* **Read-only images**: a built image is immutable at run time, so you cannot write inside it. Changes persist only to bind-mounted host paths, to a writable [overlay](#overlay-filesystems), or to a [sandbox](#sandbox-mode). This is a common early surprise and the reason those features exist.
 
 # 2. Installation
 
