@@ -622,6 +622,8 @@ Building writes a new image, which historically required root. There are three w
 
 The [fakeroot](https://docs.sylabs.io/guides/latest/user-guide/fakeroot.html) feature lets unprivileged users build containers from definition files without `sudo`. It uses Linux user namespaces to map your user ID to root (UID 0) inside the container, so commands like `apt-get install` work during `%post`.
 
+To unpack that, a user namespace is a Linux kernel feature that gives a process its own private mapping of user and group IDs, separate from the host's. The root you get inside the build is therefore confined to the namespace: you can `apt-get install`, create root-owned files, and `chown` freely, but you gain no real privileges over the host and cannot touch any file you could not already access as yourself. That confinement is what lets an administrator permit unprivileged builds where they could never permit Docker, and it is the same rootless principle that makes Singularity suitable for HPC (see [Why containers in HPC](#why-containers-in-hpc) and the build-versus-run note in [Key concepts](#key-concepts)). For it to work, the kernel must have user namespaces enabled and each user must be allocated a range of subordinate IDs in `/etc/subuid` and `/etc/subgid`, which is what the administrator configures with the `config fakeroot` command below.
+
 ```console
 singularity build --fakeroot my_image.sif my_definition.def
 ```
