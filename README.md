@@ -67,7 +67,7 @@ If you have used Docker the idea is the same, and Singularity can even run Docke
 
 ## Why containers in HPC
 
-HPC (High-Performance Computing) refers to large, shared computing clusters: many compute nodes drawing on a common high-capacity filesystem, with users submitting work as jobs through a batch scheduler such as [Slurm](https://slurm.schedmd.com/). Hundreds of people may share the same hardware, so the system has to stay secure and predictable for everyone at once. This setting is what shaped Singularity. (These notes follow the [Nextflow tutorial](https://training.nextflow.io/basic_training/containers/#singularity) on containers.)
+HPC (High-Performance Computing) refers to large, shared computing clusters: many compute nodes drawing on a common high-capacity filesystem, with users submitting work as jobs through a batch scheduler. Hundreds of people may share the same hardware, so the system has to stay secure and predictable for everyone at once. This setting is what shaped Singularity. (These notes follow the [Nextflow tutorial](https://training.nextflow.io/basic_training/containers/#singularity) on containers.)
 
 The usual container tool, Docker, does not fit this environment. Docker relies on a root-owned background daemon that runs and manages containers, and a user who can reach that daemon can effectively obtain root on the host (for example by mounting and editing system files). That is fine on a machine you own, but on a shared cluster it is a serious security problem, which is why Docker is generally not available on HPC systems.
 
