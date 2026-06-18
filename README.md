@@ -1220,7 +1220,7 @@ Concrete examples of putting the above together, including the worked projects k
 
 ## BioContainers
 
-Run (https://biocontainers-edu.readthedocs.io/en/latest/what_is_biocontainers.html) containers. To look for a container, go to the [BioContainers organisation page](https://quay.io/organization/biocontainers) and wait for all the containers to load on the page; this takes several minutes because there's a lot of containers, so go get a tasty beverage while the page loads. (There are 11,073 containers as of 2023/06/06.) Once it finishes loading, you can quickly search for a tool of interest.
+Run [BioContainers](https://biocontainers-edu.readthedocs.io/en/latest/what_is_biocontainers.html) containers. To look for a container, go to the [BioContainers organisation page](https://quay.io/organization/biocontainers) and wait for all the containers to load on the page; this takes several minutes because there's a lot of containers, so go get a tasty beverage while the page loads. (There are 11,073 containers as of 2023/06/06.) Once it finishes loading, you can quickly search for a tool of interest.
 
 SAMtools.
 
@@ -1273,10 +1273,10 @@ singularity exec meme_5.5.2--py310pl5321h2bc4914_1.sif meme -version
 
 ## Example projects in this repo
 
-* [rstudio/](rstudio/) — running RStudio Server in Singularity (uses Rocker images).
-* [ollama/](ollama/) — running an Ollama LLM as a background service via `%startscript` and instances.
-* [demo/](demo/) — build-testing examples, including `%test` section behaviour.
-* [runscript/](runscript/) — examples of `%runscript` usage.
+* [rstudio/](rstudio/): running RStudio Server in Singularity (uses Rocker images).
+* [ollama/](ollama/): running an Ollama LLM as a background service via `%startscript` and instances.
+* [demo/](demo/): build-testing examples, including `%test` section behaviour.
+* [runscript/](runscript/): examples of `%runscript` usage.
 
 # 9. Troubleshooting
 
