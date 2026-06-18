@@ -67,13 +67,15 @@ If you have used Docker the idea is the same, and Singularity can even run Docke
 
 ## Why containers in HPC
 
-Following the getting started guide from the [Nextflow tutorial](https://training.nextflow.io/basic_training/containers/#singularity).
+HPC (High-Performance Computing) refers to large, shared computing clusters: many compute nodes drawing on a common high-capacity filesystem, with users submitting work as jobs through a batch scheduler such as [Slurm](https://slurm.schedmd.com/). Hundreds of people may share the same hardware, so the system has to stay secure and predictable for everyone at once. This setting is what shaped Singularity. (These notes follow the [Nextflow tutorial](https://training.nextflow.io/basic_training/containers/#singularity) on containers.)
 
-Singularity is a container runtime designed to work in high-performance computing data centers, where the usage of Docker is generally not allowed due to security reasons.
+The usual container tool, Docker, does not fit this environment. Docker relies on a root-owned background daemon that runs and manages containers, and a user who can reach that daemon can effectively obtain root on the host (for example by mounting and editing system files). That is fine on a machine you own, but on a shared cluster it is a serious security problem, which is why Docker is generally not available on HPC systems.
 
-Singularity implements a container execution model similar to Docker but it uses a completely different implementation design.
+Singularity was built to solve exactly this. It has no daemon, and a container runs as the user who launched it, with no privilege escalation. A running container is simply one of your ordinary processes, so an administrator can allow Singularity without handing out root. This is the payoff of the design noted in [What is Singularity?](#what-is-singularity).
 
-A Singularity container image is archived as a plain file that can be stored in a shared file system and accessed by many computing nodes managed using a batch scheduler.
+Its single-file image format suits a cluster too. A SIF image is one plain file on the shared filesystem, so every compute node can read the same image with no per-node installation and no registry service running on the cluster. The container launches like any other job under the batch scheduler, fitting into existing HPC workflows rather than replacing them.
+
+Finally, the same properties make work reproducible across the cluster and over time. Because the software environment is baked into the image, a job runs identically on any node and on any day, and the very same file moves unchanged from your laptop to the cluster.
 
 ## SingularityCE vs Apptainer
 
