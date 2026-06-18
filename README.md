@@ -79,20 +79,22 @@ Finally, the same properties make work reproducible across the cluster and over 
 
 ## SingularityCE vs Apptainer
 
-Singularity forked into [Apptainer](https://apptainer.org/news/community-announcement-20211130/) and [SingularityCE](https://sylabs.io/singularity/). Most of my notes here were written before I knew about the fork and are based on using SingularityCE.
+Singularity was created in 2015 by Gregory Kurtzer and a team at Lawrence Berkeley National Laboratory, and was rewritten in Go in 2018. In 2021 the project split in two. [Sylabs](https://sylabs.io/singularity/), the company offering commercial support, forked it and kept the Singularity name for their product, releasing it as **SingularityCE** (Community Edition). A few months later, on 30 November 2021, the original open-source project joined the Linux Foundation and was renamed [Apptainer](https://apptainer.org/news/community-announcement-20211130/).
 
-The commands are largely interchangeable. The Hello World example works the same for `apptainer`.
+Most of my notes here were written before I knew about the fork and are based on using SingularityCE. The two share a common origin and their commands remain largely interchangeable, so throughout these notes the `singularity` command is used but you can usually substitute `apptainer` directly. The Hello World example works the same either way:
 
 ```console
-wget https://github.com/apptainer/apptainer/releases/download/v1.2.5/apptainer_1.2.5_amd64.deb
-sudo apt install ./apptainer_1.2.5_amd64.deb
-
 apptainer pull hello-world.sif shub://vsoch/hello-world
 apptainer run hello-world.sif
 # RaawwWWWWWRRRR!! Avocado!
 ```
 
-Throughout these notes the `singularity` command is used, but you can usually substitute `apptainer` directly.
+That interchangeability is real: the SIF image format is identical, so an image built by either tool runs on the other, and an Apptainer install provides a `singularity` symlink so existing scripts keep working. The main exceptions to watch for (the [Singularity compatibility guide](https://apptainer.org/docs/user/latest/singularity_compatibility.html) has the full list):
+
+* **Environment variables**: the `SINGULARITY_` and `SINGULARITYENV_` prefixes become `APPTAINER_` and `APPTAINERENV_`. Apptainer still honours the old names for now, but warns that `SINGULARITYENV_` usage is deprecated and may be removed.
+* **No default library endpoint**: SingularityCE resolves an unqualified `library://` pull (and remote builds) to `cloud.sylabs.io`, whereas Apptainer ships with no default remote, so those commands need a remote configured first.
+* **Separate config and cache**: the configuration directory moves from `~/.singularity` to `~/.apptainer`. Apptainer migrates configuration and keyrings automatically but not the image cache, which has to be rebuilt.
+* **Diverging roadmaps**: the projects are close today but add features independently (for example instance checkpointing in Apptainer, an `--oci` runtime mode in SingularityCE), so expect them to drift apart over time.
 
 ## Key concepts
 
