@@ -474,6 +474,8 @@ cat /etc/os-release
 # LOGO=ubuntu-logo
 ```
 
+What you see in the output above is a format conversion. A Docker or OCI image is not a single file but a stack of filesystem layers, listed here as the individual blobs being copied. `pull` downloads those layers from the registry, unpacks each one (the `unpack layer` lines), and flattens them together into a single read-only SIF (`Creating SIF file`). The result, named automatically as `<name>_<tag>.sif` (hence `build_23.04.sif` above), is a self-contained image: running it needs no registry, daemon, or Docker, just the one file. The trade-off is that Docker's layer sharing and caching between images is lost, since each SIF is a standalone flattened copy. Singularity does cache the downloaded blobs, however, so pulling the same image again is much faster (see [Cache management](#cache-management)).
+
 For a large catalogue of ready-made bioinformatics images, see [BioContainers](#biocontainers).
 
 # 5. Building images
